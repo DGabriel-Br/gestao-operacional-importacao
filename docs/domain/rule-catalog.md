@@ -13,13 +13,35 @@ Os comportamentos marcados como `Relatado` foram fornecidos no briefing operacio
 
 ## Acompanhamento operacional
 
-| ID             | Comportamento atual relatado                                                                  | Resultado                                      | Estado e lacunas                                                                  |
-| -------------- | --------------------------------------------------------------------------------------------- | ---------------------------------------------- | --------------------------------------------------------------------------------- |
-| RULE-TRACK-001 | Processo sem `Data Registro` e com previsão de chegada.                                       | Permanece na fila operacional principal.       | Relatado. A expressão booleana completa ainda precisa ser extraída da planilha.   |
-| RULE-TRACK-002 | Processo marítimo sem ETA, mas com observação indicando espera por dados de atracação.        | Pode permanecer na fila operacional principal. | Relatado. Padrões textuais exatos e demais condições precisam ser caracterizados. |
-| RULE-TRACK-003 | Processo marítimo sem ETA, mas com observação indicando espera por confirmação de transbordo. | Pode permanecer na fila operacional principal. | Relatado. Padrões textuais exatos e demais condições precisam ser caracterizados. |
-| RULE-TRACK-004 | Processo já chegou e ainda não possui `Data Registro`.                                        | Continua no acompanhamento.                    | Relatado.                                                                         |
-| RULE-TRACK-005 | Processo possui `Data Registro`.                                                              | Deixa a fila operacional principal.            | Relatado. Pode passar ao controle pós-registro se cumprir os critérios próprios.  |
+Esta família foi caracterizada na Etapa 6 a partir da lógica da fórmula descrita pelo Mestre em 2026-09-26 e reproduzida por testes automatizados do domínio. `Caracterizado` não significa `Aprovado` como regra futura.
+
+A expressão caracterizada para participação é:
+
+```text
+hasProcessId
+AND NOT hasRegistration
+AND (
+  hasEstimatedArrival
+  OR awaitingTransshipmentConfirmation
+  OR (transportMode = maritime AND awaitingBerthingData)
+)
+```
+
+`hasArrival` não integra a expressão: chegada, isoladamente, não inclui nem exclui o processo. Quando mais de um gatilho é verdadeiro, a decisão preserva todas as razões caracterizadas que a sustentam.
+
+| ID             | Comportamento atual caracterizado                                                                                                  | Resultado                                | Estado e lacunas                                                                                            |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| RULE-TRACK-001 | Existe identificador, `Data Registro` está ausente e existe ETA.                                                                   | Participa da fila operacional principal. | Caracterizado e implementado na Etapa 6. Aprovação de negócio pendente.                                     |
+| RULE-TRACK-002 | Existe identificador, registro e ETA estão ausentes, o modal é marítimo e a observação indica espera por dados de atracação.       | Participa da fila operacional principal. | Caracterizado e implementado na Etapa 6 somente para o padrão textual documentado.                          |
+| RULE-TRACK-003 | Existe identificador, registro e ETA estão ausentes e a observação indica espera por confirmação de transbordo do agente de carga. | Participa da fila operacional principal. | Caracterizado e implementado na Etapa 6 sem requisito adicional de modal.                                   |
+| RULE-TRACK-004 | O processo possui `Data Chegada`, não possui registro e satisfaz ao menos um gatilho de acompanhamento.                            | Continua no acompanhamento.              | Caracterizado e implementado na Etapa 6. Chegada não cria nem encerra o acompanhamento isoladamente.        |
+| RULE-TRACK-005 | O processo possui `Data Registro`, mesmo que também possua ETA ou evidência textual de exceção.                                    | Não participa da fila principal.         | Caracterizado e implementado na Etapa 6. O possível controle pós-registro permanece fora desta regra.       |
+| RULE-TRACK-006 | Não existe identificador de processo.                                                                                              | Não participa da fila principal.         | Caracterizado e implementado na Etapa 6. Formato, unicidade e estabilidade do identificador seguem abertos. |
+| RULE-TRACK-007 | Existe identificador, não existe registro, ETA ou exceção textual aplicável.                                                       | Não participa da fila principal.         | Caracterizado e implementado na Etapa 6. Outros sinais sem ETA permanecem em aberto.                        |
+
+O reconhecimento de transbordo exige, na ordem, fragmentos equivalentes a `agdo`, `confirma`, `transbordo`, `agente` e `carga`. O reconhecimento de atracação exige, na ordem, `aguardando`, `dados` e um termo iniciado por `atraca`. A implementação trata somente caixa, acentos, pontuação e espaços para reproduzir essa correspondência legada; não executa fuzzy matching nem adiciona sinônimos.
+
+Quando existe evidência de atracação e o modal é desconhecido, a implementação retorna elegibilidade `undetermined` e uma issue explícita. Esse tratamento evita converter desconhecimento em exclusão definitiva; o resultado futuro permanece em `Q-FLOW-013`.
 
 ## Eventos operacionais
 

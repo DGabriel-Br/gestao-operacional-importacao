@@ -6,29 +6,29 @@ A planilha é uma especificação executável temporária. O comportamento relat
 
 ## Estado desta documentação
 
-Esta é a documentação da Etapa 2. Nenhuma regra operacional foi implementada.
+Esta documentação começou na Etapa 2. A Etapa 6 caracterizou e implementou exclusivamente a elegibilidade para acompanhamento operacional principal e o reconhecimento textual necessário para essa decisão.
 
 Os conteúdos usam os seguintes estados de maturidade:
 
-| Estado             | Significado                                                                                       |
-| ------------------ | ------------------------------------------------------------------------------------------------- |
-| Identificado       | O conceito ou capacidade existe, mas ainda não há comportamento suficiente para caracterização.   |
-| Relatado           | Comportamento descrito pela operação, ainda sem evidência extraída da planilha neste repositório. |
-| A validar          | Padrão relatado com ressalva explícita, que não deve ser tratado como identificação definitiva.   |
-| Em caracterização  | Existem exemplos ou artefatos em análise, mas o comportamento ainda não foi confirmado.           |
-| Caracterizado      | O comportamento atual foi confirmado por evidência reproduzível da planilha.                      |
-| Aprovado           | O responsável operacional confirmou que o comportamento deve ser preservado no novo sistema.      |
-| Princípio aprovado | Restrição de modelagem já aprovada, sem definir a implementação final.                            |
-| Implementado       | O comportamento existe no domínio de software.                                                    |
-| Verificado         | A implementação foi comparada com cenários aprovados e produziu o resultado esperado.             |
+| Estado             | Significado                                                                                                         |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| Identificado       | O conceito ou capacidade existe, mas ainda não há comportamento suficiente para caracterização.                     |
+| Relatado           | Comportamento descrito pela operação, ainda sem evidência extraída da planilha neste repositório.                   |
+| A validar          | Padrão relatado com ressalva explícita, que não deve ser tratado como identificação definitiva.                     |
+| Em caracterização  | Existem exemplos ou artefatos em análise, mas o comportamento ainda não foi confirmado.                             |
+| Caracterizado      | O comportamento atual foi explicitado a partir da planilha ou de sua lógica transcrita, com cenários reproduzíveis. |
+| Aprovado           | O responsável operacional confirmou que o comportamento deve ser preservado no novo sistema.                        |
+| Princípio aprovado | Restrição de modelagem já aprovada, sem definir a implementação final.                                              |
+| Implementado       | O comportamento existe no domínio de software.                                                                      |
+| Verificado         | A implementação foi comparada com cenários aprovados e produziu o resultado esperado.                               |
 
 Um comportamento pode ser caracterizado e ainda não ser aprovado como regra futura. Uma decisão arquitetural aprovada também não prova que uma regra operacional esteja caracterizada.
 
 ## Proveniência desta versão
 
-Os itens marcados como `Relatado` têm como fonte o briefing operacional fornecido pelo Mestre para a Etapa 2 em 2026-09-26.
+Os itens marcados como `Relatado` têm como fonte o briefing operacional fornecido pelo Mestre para a Etapa 2 em 2026-09-26. A família `RULE-TRACK` marcada como `Caracterizado` usa a expressão da fórmula e os padrões textuais descritos pelo Mestre na Etapa 6 na mesma data, reproduzidos por testes automatizados do domínio.
 
-Nenhuma fórmula, script, configuração, exportação real ou resultado da planilha foi inspecionado nesta etapa. Por isso, esses itens não estão marcados como `Caracterizado` nem como `Aprovado`.
+Nenhum arquivo da planilha foi incorporado ao repositório. A caracterização da Etapa 6 limita-se ao comportamento da fórmula explicitamente descrito e aos casos reproduzidos nos testes. Nenhuma regra operacional foi marcada como `Aprovado`.
 
 ## Mapa dos documentos
 

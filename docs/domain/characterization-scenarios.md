@@ -1,6 +1,6 @@
 # Cenários de caracterização
 
-Estes cenários são exemplos documentais anonimizados para confrontar o comportamento relatado com a planilha atual. Eles não são fixtures executáveis e não representam regras implementadas.
+Estes cenários são exemplos documentais anonimizados para confrontar o comportamento relatado com a planilha atual. A partir da Etapa 6, os cenários de acompanhamento operacional identificados abaixo também possuem testes executáveis no pacote de domínio.
 
 Os resultados chamados de `Relatado` derivam do briefing operacional da Etapa 2 em 2026-09-26. Eles ainda precisam de evidência reproduzível da planilha e aprovação humana antes de orientar testes de domínio.
 
@@ -12,7 +12,7 @@ Os resultados chamados de `Relatado` derivam do briefing operacional da Etapa 2 
 - `Resultado relatado` registra somente o comportamento fornecido nesta etapa.
 - `Evidência necessária` indica o que deve ser obtido da planilha antes de aprovar a regra futura.
 
-Os cenários são rascunhos documentais preparados para caracterização. Eles ainda não constituem evidência reproduzível da planilha.
+Salvo quando indicado como `Caracterizado na Etapa 6`, os cenários continuam como rascunhos documentais e ainda não constituem evidência reproduzível da planilha.
 
 ## SCN-001: Marítimo aguardando Mercante
 
@@ -334,42 +334,59 @@ Os cenários são rascunhos documentais preparados para caracterização. Eles a
 - Resultados atuais das duas variações.
 - Regra de ordenação textual ou temporal.
 
-## SCN-015: Marítimo sem ETA mantido em acompanhamento
+## Acompanhamento operacional caracterizado na Etapa 6
 
-**Regras relacionadas**: `RULE-TRACK-002`, `RULE-TRACK-003`
+A fonte da caracterização é a expressão da fórmula e seus padrões textuais legados descritos pelo Mestre na Etapa 6 em 2026-09-26. Os resultados abaixo são reproduzidos em `packages/domain/src/operational-monitoring/determine-monitoring-eligibility.spec.ts`. Eles ainda aguardam aprovação de negócio.
 
-**Dados relevantes**
+| Cenário   | Fatos relevantes                                                                                 | Resultado caracterizado                        | Razão principal                                |
+| --------- | ------------------------------------------------------------------------------------------------ | ---------------------------------------------- | ---------------------------------------------- |
+| `SCN-015` | `PROCESS-015`, ETA presente, chegada ausente, registro ausente.                                  | Participa do acompanhamento.                   | `HAS_ETA`                                      |
+| `SCN-016` | `PROCESS-016`, ETA e chegada presentes, registro ausente.                                        | Participa do acompanhamento.                   | `HAS_ETA`; chegada não encerra a participação. |
+| `SCN-017` | `PROCESS-017`, ETA presente e registro presente.                                                 | Não participa do acompanhamento principal.     | `ALREADY_REGISTERED`                           |
+| `SCN-018` | `PROCESS-018`, ETA ausente, registro ausente e nenhuma exceção textual reconhecida.              | Não participa do acompanhamento.               | `NO_TRACKING_TRIGGER`                          |
+| `SCN-019` | `PROCESS-019`, ETA ausente, registro ausente e espera por confirmação de transbordo reconhecida. | Participa do acompanhamento.                   | `AWAITING_TRANSSHIPMENT_CONFIRMATION`          |
+| `SCN-020` | `PROCESS-020`, modal marítimo, ETA ausente e espera por dados de atracação reconhecida.          | Participa do acompanhamento.                   | `AWAITING_BERTHING_DATA`                       |
+| `SCN-021` | `PROCESS-021`, modal aéreo, ETA ausente e texto de espera por dados de atracação reconhecido.    | Não participa pela exceção exclusiva marítima. | `BERTHING_EVIDENCE_NOT_APPLICABLE`             |
+| `SCN-022` | Identificador ausente, ETA presente e registro ausente.                                          | Não participa do acompanhamento.               | `MISSING_PROCESS_ID`                           |
+| `SCN-023` | `PROCESS-023`, observação vazia, ETA ausente e registro ausente.                                 | Não participa do acompanhamento.               | `NO_TRACKING_TRIGGER`                          |
+| `SCN-024` | `PROCESS-024`, registro presente e espera por confirmação de transbordo reconhecida.             | Não participa do acompanhamento principal.     | `ALREADY_REGISTERED`                           |
 
-- Processo: `PROCESS-015`.
-- Embarque: `SHIPMENT-015`.
-- Modal: marítimo.
-- `Data Registro`: ausente.
-- `Data da Previsão de Chegada`: ausente.
-- Observação contém sinal de espera por dados de atracação ou confirmação de transbordo.
+### Reconhecimento textual caracterizado
 
-**Resultado relatado**
+Os casos abaixo são reproduzidos em `packages/domain/src/operational-monitoring/recognize-observation-evidence.spec.ts`.
 
-- O processo pode permanecer na fila operacional principal mesmo sem ETA.
+| Caso     | Observação anonimizada                                        | Evidência reconhecida                    |
+| -------- | ------------------------------------------------------------- | ---------------------------------------- |
+| Positivo | `AGDO CONFIRMAÇÃO DE TRANSBORDO DO AGENTE DE CARGA`           | Espera por confirmação de transbordo.    |
+| Positivo | `Status: agdo., confirma o transbordo\ndo agente / de carga.` | Espera por confirmação de transbordo.    |
+| Negativo | `AGENTE DE CARGA: AGDO CONFIRMA TRANSBORDO`                   | Nenhuma, pois a ordem não corresponde.   |
+| Negativo | `AGDO CONFIRMA TRANSBORDO DO AGENTE`                          | Nenhuma, pois falta o fragmento `carga`. |
+| Positivo | `Aguardando dados de atracação`                               | Espera por dados de atracação.           |
+| Positivo | `AGUARDANDO... DADOS PARA ATRACAMENTO`                        | Espera por dados de atracação.           |
+| Negativo | `Dados recebidos; aguardando atracação.`                      | Nenhuma, pois a ordem não corresponde.   |
 
-**Evidência necessária**
-
-- Frases exatas reconhecidas.
-- Demais condições usadas pela planilha.
-- Resultado quando os dois sinais aparecem ou deixam de aparecer.
+Variações além dos fragmentos, da ordem e do ruído textual acima continuam não caracterizadas.
 
 ## Matriz mínima de cobertura
 
-| Comportamento solicitado                      | Cenário   |
-| --------------------------------------------- | --------- |
-| Marítimo aguardando Mercante                  | `SCN-001` |
-| Marítimo com Mercante pronto para conferência | `SCN-002` |
-| Aéreo aguardando CCT                          | `SCN-003` |
-| Desvio impeditivo                             | `SCN-004` |
-| Apenas desvio não impeditivo                  | `SCN-005` |
-| Pendência sem desvio aberto                   | `SCN-006` |
-| Evento não identificado                       | `SCN-007` |
-| ETA vencido sem chegada                       | `SCN-008` |
-| Processo conferido aguardando registro        | `SCN-009` |
-| BL original digitalizado pendente             | `SCN-010` |
-| BL original físico pendente                   | `SCN-011` |
-| Exceção FEDEX a validar                       | `SCN-012` |
+| Comportamento solicitado                      | Cenário              |
+| --------------------------------------------- | -------------------- |
+| Marítimo aguardando Mercante                  | `SCN-001`            |
+| Marítimo com Mercante pronto para conferência | `SCN-002`            |
+| Aéreo aguardando CCT                          | `SCN-003`            |
+| Desvio impeditivo                             | `SCN-004`            |
+| Apenas desvio não impeditivo                  | `SCN-005`            |
+| Pendência sem desvio aberto                   | `SCN-006`            |
+| Evento não identificado                       | `SCN-007`            |
+| ETA vencido sem chegada                       | `SCN-008`            |
+| Processo conferido aguardando registro        | `SCN-009`            |
+| BL original digitalizado pendente             | `SCN-010`            |
+| BL original físico pendente                   | `SCN-011`            |
+| Exceção FEDEX a validar                       | `SCN-012`            |
+| Processo com ETA e sem registro               | `SCN-015`            |
+| Processo com chegada que continua acompanhado | `SCN-016`            |
+| Processo registrado                           | `SCN-017`, `SCN-024` |
+| Processo sem gatilho de acompanhamento        | `SCN-018`, `SCN-023` |
+| Exceção de transbordo                         | `SCN-019`            |
+| Exceção marítima de atracação                 | `SCN-020`, `SCN-021` |
+| Processo sem identificador                    | `SCN-022`            |

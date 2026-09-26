@@ -40,7 +40,7 @@ Inclui controllers NestJS e a aplicação Next.js. Traduz entradas e apresenta r
 - `apps/api/src/imports/ecomex`: contrato lógico, validação e normalização técnica específicos do eComex, ainda sem parser físico, endpoint, persistência ou caso de uso.
 - `apps/api/src/imports/shared`: representação e parsing técnico de datas ISO, compartilhados apenas porque possuem semântica idêntica nas duas fronteiras.
 - `apps/web`: shell mínimo da aplicação Next.js.
-- `packages/domain`: fronteira do domínio puro, ainda sem regras operacionais.
+- `packages/domain`: domínio puro com a primeira regra de elegibilidade para acompanhamento operacional e reconhecimento separado de evidências textuais legadas.
 
 Nenhum outro pacote foi criado porque ainda não existe uso concreto.
 
@@ -80,6 +80,8 @@ Quando necessários, poderão existir pacotes ou módulos para validação Zod, 
 - Não interpretar semanticamente observações nos importadores.
 - Não criar motor genérico de regras.
 - Não introduzir infraestrutura antes de necessidade comprovada.
+
+O reconhecimento semântico usado pela elegibilidade ocorre no domínio. Ele recebe a observação preservada por uma futura camada de mapeamento, reconhece apenas os padrões caracterizados e entrega evidências à política sem conhecer o contrato do eTrack.
 
 ## Verificação arquitetural
 

@@ -4,19 +4,20 @@ Aplicação web para gestão operacional de processos de importação. O projeto
 
 ## Estado atual
 
-O repositório contém a fundação técnica e as duas primeiras fronteiras de ingestão:
+O repositório contém a fundação técnica, as duas primeiras fronteiras de ingestão e a primeira família de regras do domínio:
 
 - monorepo com pnpm workspaces;
 - aplicação NestJS mínima, sem endpoints de negócio;
 - aplicação Next.js mínima, sem telas de negócio;
-- pacote de domínio vazio de regras operacionais;
+- pacote de domínio puro com a elegibilidade para acompanhamento operacional principal;
 - documentação de arquitetura e descoberta do domínio;
 - contrato lógico e normalização técnica de linhas do eTrack;
 - contrato lógico e normalização técnica de linhas do eComex;
 - rastreabilidade e issues por linha nas duas fontes;
+- reconhecimento legado das evidências de transbordo e atracação, separado da decisão de elegibilidade;
 - typecheck e testes automatizados.
 
-Os formatos físicos das exportações eTrack e eComex ainda não foram definidos. A ingestão não lê CSV, XLSX ou sistemas externos, não correlaciona as fontes, não persiste dados e não executa regras operacionais. Banco de dados, autenticação e demais integrações ainda não foram implementados.
+Os formatos físicos das exportações eTrack e eComex ainda não foram definidos. A ingestão não lê CSV, XLSX ou sistemas externos, não correlaciona as fontes, não persiste dados e não executa regras operacionais. A regra do domínio ainda não está conectada a casos de uso. Banco de dados, autenticação e demais integrações ainda não foram implementados.
 
 ## Estrutura
 
