@@ -1,6 +1,6 @@
 # Cenários de caracterização
 
-Estes cenários são exemplos documentais anonimizados para confrontar o comportamento relatado com a planilha atual. As famílias caracterizadas nas Etapas 6, 7 e 8 possuem testes executáveis no pacote de domínio.
+Estes cenários são exemplos documentais anonimizados para confrontar o comportamento relatado com a planilha atual. As famílias caracterizadas nas Etapas 6 a 9 possuem testes executáveis no pacote de domínio.
 
 Os resultados chamados de `Relatado` derivam do briefing operacional da Etapa 2 em 2026-09-26. Eles ainda precisam de evidência reproduzível da planilha e aprovação humana antes de orientar testes de domínio.
 
@@ -200,9 +200,10 @@ Alertas, integrações e demais afirmações desses cenários amplos continuam a
 
 - Alerta `ETA vencido e carga não chegada`.
 
-**Não afirmado neste cenário**
+**Caracterização posterior da criticidade**
 
-- O nível numérico de criticidade, pois a relação entre ETA vencido e a faixa `em até 5 dias` não foi explicitada.
+- `SCN-060` e `SCN-061` substituem somente a parcela de criticidade deste cenário amplo: ETA vencida sem chegada recebe criticidade `3` pela condição matemática legada `ETA - avaliação <= 5`.
+- O alerta e a prioridade continuam apenas relatados neste cenário.
 
 **Evidência necessária**
 
@@ -443,6 +444,35 @@ A fonte da caracterização é a matriz da camada `Processamento` descrita pelo 
 
 Os cenários da Etapa 8 não reconhecem texto, não classificam desvios, não determinam alertas e não avaliam se o Mercante está aberto ou conferido. Em `SCN-041`, apenas a presença já interpretada da referência Mercante participa da reprodução do legado.
 
+## Criticidade operacional caracterizada na Etapa 9
+
+A fonte da caracterização é a ordem das condições e os limites da fórmula da camada `Processamento` descritos pelo Mestre na Etapa 9 em 2026-09-26. As entradas já são fatos válidos de domínio, sem parsing técnico ou horário. Os resultados são reproduzidos em `packages/domain/src/operational-criticality/determine-operational-criticality.spec.ts` e ainda aguardam aprovação de negócio.
+
+| Cenário   | ETA em relação à avaliação ou condição adicional                                           | Chegada  | Resultado caracterizado                           | Reason code                                                             |
+| --------- | ------------------------------------------------------------------------------------------ | -------- | ------------------------------------------------- | ----------------------------------------------------------------------- |
+| `SCN-049` | ETA ausente.                                                                               | Ausente  | Não classificada.                                 | `MISSING_ETA`                                                           |
+| `SCN-050` | ETA ausente.                                                                               | Presente | Não classificada.                                 | `MISSING_ETA`                                                           |
+| `SCN-051` | ETA na data de avaliação.                                                                  | Presente | Criticidade `4`.                                  | `CARGO_ARRIVED`                                                         |
+| `SCN-052` | ETA futura distante.                                                                       | Presente | Criticidade `4`.                                  | `CARGO_ARRIVED`                                                         |
+| `SCN-053` | Diferença `0`.                                                                             | Ausente  | Criticidade `3`.                                  | `ETA_DAY_DIFFERENCE_AT_MOST_FIVE`                                       |
+| `SCN-054` | Diferença `1`.                                                                             | Ausente  | Criticidade `3`.                                  | `ETA_DAY_DIFFERENCE_AT_MOST_FIVE`                                       |
+| `SCN-055` | Diferença `5`.                                                                             | Ausente  | Criticidade `3`.                                  | `ETA_DAY_DIFFERENCE_AT_MOST_FIVE`                                       |
+| `SCN-056` | Diferença `6`.                                                                             | Ausente  | Criticidade `2`.                                  | `ETA_DAY_DIFFERENCE_AT_MOST_SEVEN`                                      |
+| `SCN-057` | Diferença `7`.                                                                             | Ausente  | Criticidade `2`.                                  | `ETA_DAY_DIFFERENCE_AT_MOST_SEVEN`                                      |
+| `SCN-058` | Diferença `8`.                                                                             | Ausente  | Criticidade `1`.                                  | `ETA_DAY_DIFFERENCE_BEYOND_SEVEN`                                       |
+| `SCN-059` | ETA futura distante, além de sete dias.                                                    | Ausente  | Criticidade `1`.                                  | `ETA_DAY_DIFFERENCE_BEYOND_SEVEN`                                       |
+| `SCN-060` | Diferença `-1`, ETA ontem.                                                                 | Ausente  | Criticidade `3`.                                  | `ETA_DAY_DIFFERENCE_AT_MOST_FIVE`                                       |
+| `SCN-061` | Diferença `-20`, ETA vinte dias vencida.                                                   | Ausente  | Criticidade `3`.                                  | `ETA_DAY_DIFFERENCE_AT_MOST_FIVE`                                       |
+| `SCN-062` | De 25/02 a 02/03: diferença `6` em 2024 e 2000; diferença `5` em 2100, que não é bissexto. | Ausente  | Criticidade `2` nos anos bissextos e `3` em 2100. | `ETA_DAY_DIFFERENCE_AT_MOST_SEVEN` ou `ETA_DAY_DIFFERENCE_AT_MOST_FIVE` |
+| `SCN-063` | Travessia de mês com diferença `6`.                                                        | Ausente  | Criticidade `2`.                                  | `ETA_DAY_DIFFERENCE_AT_MOST_SEVEN`                                      |
+| `SCN-064` | Travessia de ano com diferença `6`.                                                        | Ausente  | Criticidade `2`.                                  | `ETA_DAY_DIFFERENCE_AT_MOST_SEVEN`                                      |
+| `SCN-065` | Horários de origem distintos já projetados para a mesma data civil.                        | Ausente  | Criticidade `3`.                                  | `ETA_DAY_DIFFERENCE_AT_MOST_FIVE`                                       |
+| `SCN-066` | ETA presente e chegada confirmada sem data de chegada no fato avaliado.                    | Presente | Criticidade `4`.                                  | `CARGO_ARRIVED`                                                         |
+
+`SCN-050` caracteriza explicitamente que chegada sem ETA não produz criticidade `4`. `SCN-060` e `SCN-061` preservam a limitação legada para ETA vencida. `SCN-066` confirma que a política usa somente presença de chegada e não compara sua data.
+
+Não há alerta, prioridade ou ordenação nos cenários `SCN-049` a `SCN-066`.
+
 ## Matriz mínima de cobertura
 
 | Comportamento solicitado                      | Cenário                                      |
@@ -477,3 +507,8 @@ Os cenários da Etapa 8 não reconhecem texto, não classificam desvios, não de
 | Mapeamento direto de evento para etapa        | `SCN-034` a `SCN-039`, `SCN-044` a `SCN-047` |
 | Digitação concluída por modal e Mercante      | `SCN-040` a `SCN-043`                        |
 | Independência dos fatos adicionais            | `SCN-048`                                    |
+| ETA ausente com e sem chegada                 | `SCN-049`, `SCN-050`                         |
+| Chegada com ETA presente                      | `SCN-051`, `SCN-052`, `SCN-066`              |
+| Limites numéricos da criticidade              | `SCN-053` a `SCN-059`                        |
+| ETA vencida sem chegada                       | `SCN-060`, `SCN-061`                         |
+| Calendário gregoriano e data civil            | `SCN-062` a `SCN-065`                        |

@@ -2,7 +2,7 @@
 
 Este catálogo descreve o comportamento atual relatado da ferramenta. Ele não é uma implementação, não define tipos finais e não aprova automaticamente cada comportamento como requisito futuro.
 
-Os comportamentos marcados como `Relatado` foram fornecidos no briefing operacional da Etapa 2 em 2026-09-26. As famílias `RULE-TRACK` e `RULE-EVENT` possuem caracterizações posteriores baseadas na lógica das fórmulas explicitamente descrita pelo Mestre.
+Os comportamentos marcados como `Relatado` foram fornecidos no briefing operacional da Etapa 2 em 2026-09-26. As famílias `RULE-TRACK`, `RULE-EVENT`, `RULE-STAGE` e `RULE-CRIT` possuem caracterizações posteriores baseadas na lógica das fórmulas explicitamente descrita pelo Mestre.
 
 ## Como interpretar o catálogo
 
@@ -136,16 +136,33 @@ A precedência completa entre essa etapa derivada e futuras condições excepcio
 
 ## Criticidade
 
-A regra atual usa a data corrente e dias corridos.
+**Fonte da caracterização**: ordem e limites da fórmula da camada `Processamento` descritos pelo Mestre na Etapa 9 em 2026-09-26 e reproduzidos em `packages/domain/src/operational-criticality/determine-operational-criticality.spec.ts`.
 
-| ID            | Condição relatada                  | Criticidade                                               | Estado e lacunas                                                          |
-| ------------- | ---------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------- |
-| RULE-CRIT-001 | Carga já chegou.                   | `4`                                                       | Relatado.                                                                 |
-| RULE-CRIT-002 | ETA em até 5 dias.                 | `3`                                                       | Relatado. O tratamento de ETA vencido sem chegada precisa ser confirmado. |
-| RULE-CRIT-003 | ETA superior a 5 e até 7 dias.     | `2`                                                       | Relatado. Limites são inclusivos conforme a descrição fornecida.          |
-| RULE-CRIT-004 | ETA superior a 7 dias.             | `1`                                                       | Relatado.                                                                 |
-| RULE-CRIT-005 | Processo sem ETA.                  | Pode não possuir criticidade numérica.                    | Relatado. O uso de um estado explícito ainda precisa ser aprovado.        |
-| RULE-CRIT-006 | Avaliação temporal da criticidade. | Usa data corrente e dias corridos no comportamento atual. | Relatado. Não estabelece a regra futura definitiva.                       |
+A expressão caracterizada é:
+
+```text
+se ETA estiver ausente:
+  não classificada
+senão, se chegada estiver presente:
+  criticidade 4
+senão, se ETA - data de avaliação <= 5:
+  criticidade 3
+senão, se ETA - data de avaliação <= 7:
+  criticidade 2
+senão:
+  criticidade 1
+```
+
+| ID            | Condição caracterizada                                                     | Resultado                      | Estado e limites                                                                                     |
+| ------------- | -------------------------------------------------------------------------- | ------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| RULE-CRIT-001 | ETA existe e a chegada está presente.                                      | Criticidade `4`.               | Caracterizado, não aprovado. A data da chegada não é comparada.                                      |
+| RULE-CRIT-002 | ETA existe, chegada está ausente e `ETA - avaliação <= 5`.                 | Criticidade `3`.               | Caracterizado, não aprovado. Inclui ETA hoje e qualquer ETA vencida, mesmo por mais de cinco dias.   |
+| RULE-CRIT-003 | ETA existe, chegada está ausente e `5 < ETA - avaliação <= 7`.             | Criticidade `2`.               | Caracterizado, não aprovado. Os limites 5 e 7 são inclusivos nos respectivos ramos.                  |
+| RULE-CRIT-004 | ETA existe, chegada está ausente e `ETA - avaliação > 7`.                  | Criticidade `1`.               | Caracterizado, não aprovado.                                                                         |
+| RULE-CRIT-005 | ETA está ausente, com chegada presente ou ausente.                         | Criticidade não classificada.  | Caracterizado, não aprovado. A ausência de ETA precede a presença de chegada.                        |
+| RULE-CRIT-006 | ETA e avaliação são datas civis válidas e a data de avaliação é explícita. | Usa dias corridos gregorianos. | Caracterizado, não aprovado. Horas, timezone, dias úteis e relógio global não participam da decisão. |
+
+A diferença possui sinal e não recebe valor absoluto ou limite mínimo. Por isso, ETA vencida por um ou vinte dias continua no ramo matemático `<= 5` e recebe criticidade `3`. O alerta de ETA vencida permanece uma dimensão separada. Criticidade não define prioridade nem ordenação.
 
 ## Desvios
 
@@ -198,22 +215,22 @@ Princípio catalogado: descrição de desvio não é necessariamente suficiente 
 
 ## Alertas operacionais
 
-| Alerta relatado                     | Condição conhecida nesta etapa                                                                                |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `Evento não identificado`           | Nenhum evento conhecido foi identificado.                                                                     |
-| `Erro na Digitação`                 | O alerta existe, mas seu gatilho e sua relação com `Erro ao gerar a DUIMP` ainda precisam ser caracterizados. |
-| `Pendência sem desvio aberto`       | Etapa Pendência sem desvio aberto.                                                                            |
-| `Desvio impeditivo aberto`          | Existe ao menos um desvio impeditivo aberto.                                                                  |
-| `ETA vencido e carga não chegada`   | ETA anterior à data de avaliação e `Data Chegada` ausente. A relação com criticidade precisa ser validada.    |
-| `Priorizar análise crítica`         | Gatilho ainda não detalhado.                                                                                  |
-| `Priorizar envio para digitação`    | Gatilho ainda não detalhado.                                                                                  |
-| `Priorizar digitação`               | Gatilho ainda não detalhado.                                                                                  |
-| `Pode encaminhar para digitação`    | Gatilho ainda não detalhado.                                                                                  |
-| `Processo em digitação`             | Gatilho ainda não detalhado.                                                                                  |
-| `Pode enviar para conferência`      | Gatilho ainda não detalhado.                                                                                  |
-| `Aguardando retorno da conferência` | Gatilho ainda não detalhado.                                                                                  |
-| `Pronto para registro`              | Gatilho ainda não detalhado.                                                                                  |
-| `Aguardando abertura do CCT`        | Associado ao fluxo aéreo, com condição exata ainda não detalhada.                                             |
+| Alerta relatado                     | Condição conhecida nesta etapa                                                                                                                        |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Evento não identificado`           | Nenhum evento conhecido foi identificado.                                                                                                             |
+| `Erro na Digitação`                 | O alerta existe, mas seu gatilho e sua relação com `Erro ao gerar a DUIMP` ainda precisam ser caracterizados.                                         |
+| `Pendência sem desvio aberto`       | Etapa Pendência sem desvio aberto.                                                                                                                    |
+| `Desvio impeditivo aberto`          | Existe ao menos um desvio impeditivo aberto.                                                                                                          |
+| `ETA vencido e carga não chegada`   | ETA anterior à data de avaliação e `Data Chegada` ausente. O alerta ainda não foi implementado; separadamente, a criticidade legada desse caso é `3`. |
+| `Priorizar análise crítica`         | Gatilho ainda não detalhado.                                                                                                                          |
+| `Priorizar envio para digitação`    | Gatilho ainda não detalhado.                                                                                                                          |
+| `Priorizar digitação`               | Gatilho ainda não detalhado.                                                                                                                          |
+| `Pode encaminhar para digitação`    | Gatilho ainda não detalhado.                                                                                                                          |
+| `Processo em digitação`             | Gatilho ainda não detalhado.                                                                                                                          |
+| `Pode enviar para conferência`      | Gatilho ainda não detalhado.                                                                                                                          |
+| `Aguardando retorno da conferência` | Gatilho ainda não detalhado.                                                                                                                          |
+| `Pronto para registro`              | Gatilho ainda não detalhado.                                                                                                                          |
+| `Aguardando abertura do CCT`        | Associado ao fluxo aéreo, com condição exata ainda não detalhada.                                                                                     |
 
 Alertas e etapas podem coexistir. A lista não define severidade nem ordenação da fila.
 
@@ -335,7 +352,7 @@ Estas precedências são locais. Elas não formam uma ordem global de avaliaçã
 4. Na etapa `Pendência`, desvios impeditivos abertos determinam bloqueio antes da análise dos não impeditivos.
 5. Na etapa `Pendência`, ausência total de desvios abertos determina inconsistência.
 6. Depois de `Digitação OK`, regras do modal podem substituir a etapa direta por uma espera específica ou prontidão.
-7. Carga já chegada recebe criticidade 4 no comportamento atual relatado.
+7. Na criticidade, ETA ausente encerra a avaliação sem nível numérico; com ETA presente, chegada tem precedência sobre as faixas de diferença; sem chegada, aplicam-se em ordem os limites `<= 5`, `<= 7` e `> 7`.
 
 A ordem global entre evento, etapa, criticidade, alertas, documentos, desvios e exceções ainda precisa ser caracterizada.
 

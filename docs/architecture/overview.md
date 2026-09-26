@@ -40,7 +40,7 @@ Inclui controllers NestJS e a aplicação Next.js. Traduz entradas e apresenta r
 - `apps/api/src/imports/ecomex`: contrato lógico, validação e normalização técnica específicos do eComex, ainda sem parser físico, endpoint, persistência ou caso de uso.
 - `apps/api/src/imports/shared`: representação e parsing técnico de datas ISO, compartilhados apenas porque possuem semântica idêntica nas duas fronteiras.
 - `apps/web`: shell mínimo da aplicação Next.js.
-- `packages/domain`: domínio puro com a elegibilidade para acompanhamento operacional, o reconhecimento do evento operacional e a determinação da etapa operacional, mantendo evidência textual, evento e etapa como responsabilidades distintas.
+- `packages/domain`: domínio puro com a elegibilidade para acompanhamento operacional, o reconhecimento do evento operacional, a determinação da etapa operacional e a criticidade operacional, mantendo essas dimensões independentes.
 
 Nenhum outro pacote foi criado porque ainda não existe uso concreto.
 
@@ -86,6 +86,8 @@ O reconhecimento semântico usado pela elegibilidade ocorre no domínio. Ele rec
 O reconhecimento de evento operacional também ocorre no domínio. Sua normalização reproduz somente o comportamento textual caracterizado dessa família e termina ao produzir um evento reconhecido ou `UNIDENTIFIED`.
 
 A determinação da etapa recebe esse evento já reconhecido. Somente `TYPING_COMPLETED` recebe também modal de domínio e presença da referência Mercante. Essa política não relê observações, não conhece os vocabulários das fontes e não determina alertas, criticidade, desvios ou o status detalhado do Mercante.
+
+A criticidade recebe ETA civil válida ou ausência confirmada, presença de chegada e data civil de avaliação explícita. A política usa dias corridos do calendário gregoriano, não acessa relógio global e não determina prioridade, alerta ou ordenação da fila.
 
 ## Verificação arquitetural
 

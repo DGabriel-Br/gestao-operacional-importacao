@@ -32,3 +32,14 @@ export {
   type StageOperationalEvent,
   type StageTransportMode,
 } from './operational-stages/determine-operational-stage.js'
+
+export {
+  determineOperationalCriticality,
+  type CivilDate,
+  type ClassifiedOperationalCriticalityDecision,
+  type OperationalCriticality,
+  type OperationalCriticalityDecision,
+  type OperationalCriticalityFacts,
+  type OperationalCriticalityReasonCode,
+  type UnclassifiedOperationalCriticalityDecision,
+} from './operational-criticality/determine-operational-criticality.js'
