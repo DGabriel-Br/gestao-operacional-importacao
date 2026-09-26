@@ -2,7 +2,7 @@
 
 Este catálogo descreve o comportamento atual relatado da ferramenta. Ele não é uma implementação, não define tipos finais e não aprova automaticamente cada comportamento como requisito futuro.
 
-Os comportamentos marcados como `Relatado` foram fornecidos no briefing operacional da Etapa 2 em 2026-09-26. Nenhum artefato da planilha foi inspecionado para confirmá-los.
+Os comportamentos marcados como `Relatado` foram fornecidos no briefing operacional da Etapa 2 em 2026-09-26. As famílias `RULE-TRACK` e `RULE-EVENT` possuem caracterizações posteriores baseadas na lógica das fórmulas explicitamente descrita pelo Mestre.
 
 ## Como interpretar o catálogo
 
@@ -45,25 +45,52 @@ Quando existe evidência de atracação e o modal é desconhecido, a implementa�
 
 ## Eventos operacionais
 
-Os eventos conhecidos atualmente são:
+Esta família foi caracterizada na Etapa 7 a partir da fórmula da camada `Processamento` descrita pelo Mestre em 2026-09-26 e reproduzida por testes automatizados. `Caracterizado` não significa `Aprovado`.
 
-- `Processo em análise crítica`;
-- `Pendência apontada`;
-- `Recebemos retorno das pendências`;
-- `Processo encaminhado para a digitação`;
-- `Encaminhado para digitação`;
-- `Erro ao gerar a DUIMP`;
-- `Digitação OK`;
-- `Processo encaminhado para conferência`;
-- `Encaminhado para conferência`;
-- `Processo conferido`.
+| Código estável              | Texto configurado                       |
+| --------------------------- | --------------------------------------- |
+| `CRITICAL_ANALYSIS_STARTED` | `Processo em análise crítica`           |
+| `PENDING_ISSUE_REPORTED`    | `Pendência apontada`                    |
+| `PENDING_ISSUES_RETURNED`   | `Recebemos retorno das pendências`      |
+| `PROCESS_SENT_TO_TYPING`    | `Processo encaminhado para a digitação` |
+| `SENT_TO_TYPING`            | `Encaminhado para digitação`            |
+| `DUIMP_GENERATION_ERROR`    | `Erro ao gerar a DUIMP`                 |
+| `TYPING_COMPLETED`          | `Digitação OK`                          |
+| `PROCESS_SENT_TO_REVIEW`    | `Processo encaminhado para conferência` |
+| `SENT_TO_REVIEW`            | `Encaminhado para conferência`          |
+| `PROCESS_REVIEWED`          | `Processo conferido`                    |
 
-| ID             | Comportamento atual relatado                                                                                                 | Resultado                                                                  | Estado e lacunas                                                                        |
-| -------------- | ---------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| RULE-EVENT-001 | A observação é comparada com padrões conhecidos após normalização de caixa, acentuação, pontuação, espaços e alguns artigos. | Eventos reconhecíveis podem ser identificados mesmo sem igualdade literal. | Relatado. O algoritmo e a lista de artigos ainda não foram fornecidos.                  |
-| RULE-EVENT-002 | Mais de um evento conhecido aparece nas observações.                                                                         | O último evento reconhecido é usado como base para a etapa atual.          | Relatado. “Último” pode significar ordem textual ou temporal e precisa ser validado.    |
-| RULE-EVENT-003 | Nenhum evento conhecido é identificado.                                                                                      | Evento `Evento não identificado` e etapa `Revisar observação`.             | Relatado.                                                                               |
-| RULE-EVENT-004 | Um evento é identificado.                                                                                                    | O evento participa da determinação da etapa, mas não é a própria etapa.    | Relatado e aprovado como distinção conceitual. O mapeamento completo ainda está aberto. |
+| ID             | Comportamento atual caracterizado                                                                                                                             | Resultado                                                                                                                  | Estado e lacunas                                                                                                        |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| RULE-EVENT-001 | A observação e cada texto configurado são normalizados com o algoritmo legado específico desta família.                                                       | Variações caracterizadas podem corresponder sem igualdade literal do texto bruto.                                          | Caracterizado e implementado na Etapa 7. Aprovação de negócio pendente.                                                 |
+| RULE-EVENT-002 | Para cada texto configurado, a busca equivalente a `SEARCH` considera sua primeira ocorrência na observação normalizada. Entre essas posições, vence a maior. | Seleciona o evento cuja primeira correspondência começa mais à direita.                                                    | Caracterizado e implementado. Não representa necessariamente o evento semanticamente mais recente.                      |
+| RULE-EVENT-003 | Nenhum texto configurado é encontrado.                                                                                                                        | Evento `UNIDENTIFIED`, equivalente ao legado `Evento não identificado`.                                                    | Caracterizado e implementado. Nenhuma etapa é determinada nesta família.                                                |
+| RULE-EVENT-004 | Um evento é reconhecido.                                                                                                                                      | O código do evento permanece independente da futura etapa operacional.                                                     | Distinção conceitual aprovada; reconhecimento implementado; mapeamento para etapa continua fora do escopo.              |
+| RULE-EVENT-005 | A observação está ausente, vazia, contém somente espaços ou possui texto sem correspondência.                                                                 | Todos resultam em evento `UNIDENTIFIED`, com reason codes distintos para preservar a condição avaliada.                    | Resultado legado caracterizado; distinção explicativa implementada no domínio. Efeito futuro em etapa permanece aberto. |
+| RULE-EVENT-006 | Uma variante curta começa dentro da variante longa de digitação ou conferência.                                                                               | A variante curta vence porque sua primeira correspondência começa mais à direita.                                          | Caracterizado e implementado. As entradas continuam separadas e não foram canonicalizadas.                              |
+| RULE-EVENT-007 | Um evento aparece, outro evento aparece depois e o primeiro evento volta a aparecer ao final.                                                                 | A repetição final do primeiro evento é ignorada para seleção; compara-se somente sua primeira ocorrência com a do segundo. | Caracterizado e implementado. Uma possível melhoria futura exige decisão explícita.                                     |
+
+### Normalização caracterizada para eventos
+
+Na ordem observada, o algoritmo:
+
+1. converte o texto para minúsculas;
+2. substitui espaço não separável por espaço comum;
+3. remove caracteres de controle equivalentes aos códigos ASCII de 0 a 31;
+4. aplica somente os mapas `á à â ã ä -> a`, `é è ê ë -> e`, `í ì î ï -> i`, `ó ò ô õ ö -> o`, `ú ù û ü -> u` e `ç -> c`;
+5. substitui caracteres fora de `a-z`, `0-9` e espaço por espaço;
+6. colapsa espaços e aplica `trim`;
+7. remove os artigos isolados `a`, `o`, `as`, `os`, `um` e `uma`;
+8. normaliza novamente os espaços.
+
+A busca é literal sobre o texto normalizado, sem fuzzy matching, sinônimos, limites de palavra, `lastIndexOf`, tokenização ou preferência pela chave mais longa. A posição explicativa é 1-based no texto normalizado e não corresponde a um índice no texto bruto.
+
+### Limitações legadas caracterizadas
+
+- As entradas longas de digitação e conferência também contêm as respectivas entradas curtas. A entrada curta começa mais à direita e, por isso, é selecionada.
+- A repetição posterior do mesmo evento não atualiza sua posição, pois `SEARCH` encontra apenas a primeira ocorrência de cada chave.
+- A remoção de controles pode concatenar palavras separadas diretamente por quebra de linha. `Digitação\nOK`, por exemplo, não corresponde a `Digitação OK`.
+- O catálogo atual possui dez chaves normalizadas distintas, sem pares que possam começar na mesma posição. Essa invariância é protegida por teste. O desempate para uma futura chave coincidente ainda não está definido.
 
 ## Etapas operacionais
 
@@ -290,7 +317,7 @@ Campos exibidos atualmente:
 Estas precedências são locais. Elas não formam uma ordem global de avaliação.
 
 1. A presença de `Data Registro` retira o processo da fila operacional principal.
-2. Entre eventos reconhecidos nas observações, o último reconhecido é usado como base para a etapa.
+2. Entre eventos reconhecidos nas observações, o algoritmo legado seleciona a maior entre as primeiras posições normalizadas. Isso não comprova o último evento semântico nem determina a etapa.
 3. Em evidências conflitantes de Mercante e BL digitalizado, a evidência mais recente identificável pode prevalecer.
 4. Na etapa `Pendência`, desvios impeditivos abertos determinam bloqueio antes da análise dos não impeditivos.
 5. Na etapa `Pendência`, ausência total de desvios abertos determina inconsistência.

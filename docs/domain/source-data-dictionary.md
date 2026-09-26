@@ -142,7 +142,7 @@ Na arquitetura futura existem duas responsabilidades distintas:
 1. A integração poderá normalizar aspectos técnicos, como encoding, espaços, cabeçalhos e formatos de data.
 2. O domínio interpretará o significado operacional de eventos, desvios, exceções e documentos.
 
-O algoritmo exato de normalização textual da planilha ainda precisa ser caracterizado. Não se deve inferir que toda normalização atual será preservada sem validação.
+O algoritmo de normalização usado exclusivamente para reconhecer o evento operacional foi caracterizado na Etapa 7. Ele não se torna um normalizador universal e não caracteriza os algoritmos textuais de Mercante, documentos, desvios ou outras famílias.
 
 ## Ausência, desconhecimento e inconsistência
 

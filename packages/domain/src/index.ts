@@ -12,3 +12,12 @@ export {
   recognizeOperationalMonitoringObservationEvidence,
   type MonitoringObservationEvidence,
 } from './operational-monitoring/recognize-observation-evidence.js'
+
+export {
+  recognizeOperationalEvent,
+  type OperationalEvent,
+  type OperationalEventRecognition,
+  type OperationalEventRecognitionReasonCode,
+  type RecognizedOperationalEvent,
+  type UnidentifiedOperationalEvent,
+} from './operational-events/recognize-operational-event.js'

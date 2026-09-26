@@ -367,6 +367,43 @@ Os casos abaixo são reproduzidos em `packages/domain/src/operational-monitoring
 
 Variações além dos fragmentos, da ordem e do ruído textual acima continuam não caracterizadas.
 
+## Reconhecimento de evento operacional caracterizado na Etapa 7
+
+A fonte da caracterização é o catálogo e a fórmula de reconhecimento da camada `Processamento` observados e descritos pelo Mestre na Etapa 7 em 2026-09-26. Os resultados são reproduzidos em `packages/domain/src/operational-events/recognize-operational-event.spec.ts` e ainda aguardam aprovação de negócio.
+
+### Catálogo isolado e sobreposições
+
+| Texto configurado                       | Evento selecionado pelo algoritmo legado | Observação                                                 |
+| --------------------------------------- | ---------------------------------------- | ---------------------------------------------------------- |
+| `Processo em análise crítica`           | `CRITICAL_ANALYSIS_STARTED`              | Correspondência isolada.                                   |
+| `Pendência apontada`                    | `PENDING_ISSUE_REPORTED`                 | Correspondência isolada.                                   |
+| `Recebemos retorno das pendências`      | `PENDING_ISSUES_RETURNED`                | Correspondência isolada.                                   |
+| `Processo encaminhado para a digitação` | `SENT_TO_TYPING`                         | A chave curta começa mais à direita dentro da chave longa. |
+| `Encaminhado para digitação`            | `SENT_TO_TYPING`                         | Correspondência isolada da chave curta.                    |
+| `Erro ao gerar a DUIMP`                 | `DUIMP_GENERATION_ERROR`                 | Correspondência isolada.                                   |
+| `Digitação OK`                          | `TYPING_COMPLETED`                       | Correspondência isolada.                                   |
+| `Processo encaminhado para conferência` | `SENT_TO_REVIEW`                         | A chave curta começa mais à direita dentro da chave longa. |
+| `Encaminhado para conferência`          | `SENT_TO_REVIEW`                         | Correspondência isolada da chave curta.                    |
+| `Processo conferido`                    | `PROCESS_REVIEWED`                       | Correspondência isolada.                                   |
+
+Os códigos `PROCESS_SENT_TO_TYPING` e `PROCESS_SENT_TO_REVIEW` continuam distintos no catálogo. Eles não são unidos às variantes curtas, embora não prevaleçam nos respectivos textos longos sob a seleção legada caracterizada.
+
+### Cenários de seleção e normalização
+
+| Cenário   | Observação ou condição                                                                 | Resultado caracterizado                                                                                                  |
+| --------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `SCN-025` | Caixa, acentos, pontuação, múltiplos espaços ou artigos isolados diferem do catálogo.  | O evento corresponde após somente a normalização legada documentada.                                                     |
+| `SCN-026` | Observação `undefined`, vazia, somente com espaços ou preenchida sem evento conhecido. | Evento `UNIDENTIFIED`; reason codes distinguem ausência, vazio, branco e texto sem correspondência.                      |
+| `SCN-027` | `Processo em análise crítica // Digitação OK`.                                         | `TYPING_COMPLETED`, pois sua primeira correspondência está mais à direita.                                               |
+| `SCN-028` | `Digitação OK // Processo em análise crítica`.                                         | `CRITICAL_ANALYSIS_STARTED`, pela inversão das primeiras posições.                                                       |
+| `SCN-029` | `Digitação OK // Processo conferido // Digitação OK`.                                  | `PROCESS_REVIEWED`; a repetição final de `Digitação OK` não altera sua primeira posição.                                 |
+| `SCN-030` | `Processo encaminhado para a digitação`.                                               | `SENT_TO_TYPING`, na posição normalizada 10; a variante longa também corresponde na posição 1.                           |
+| `SCN-031` | `Processo encaminhado para conferência`.                                               | `SENT_TO_REVIEW`, na posição normalizada 10; a variante longa também corresponde na posição 1.                           |
+| `SCN-032` | `Digitação\nOK`.                                                                       | `UNIDENTIFIED`, pois a remoção do controle concatena as palavras. `Digitação OK` com espaço não separável é reconhecido. |
+| `SCN-033` | Vários eventos e fragmentos separados por `//`.                                        | Compara a primeira posição de cada chave e seleciona a maior, sem interpretar `//` como estrutura temporal.              |
+
+Não há determinação de etapa nos cenários `SCN-025` a `SCN-033`.
+
 ## Matriz mínima de cobertura
 
 | Comportamento solicitado                      | Cenário              |
@@ -390,3 +427,11 @@ Variações além dos fragmentos, da ordem e do ruído textual acima continuam n
 | Exceção de transbordo                         | `SCN-019`            |
 | Exceção marítima de atracação                 | `SCN-020`, `SCN-021` |
 | Processo sem identificador                    | `SCN-022`            |
+| Normalização textual de evento                | `SCN-025`            |
+| Evento não identificado e estados de entrada  | `SCN-026`            |
+| Eventos múltiplos em ordens opostas           | `SCN-027`, `SCN-028` |
+| Repetição sob semântica de `SEARCH`           | `SCN-029`            |
+| Sobreposição das variantes de digitação       | `SCN-030`            |
+| Sobreposição das variantes de conferência     | `SCN-031`            |
+| Controles e espaço não separável              | `SCN-032`            |
+| Observação realista separada por `//`         | `SCN-033`            |
