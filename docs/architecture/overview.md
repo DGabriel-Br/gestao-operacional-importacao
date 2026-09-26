@@ -37,6 +37,7 @@ Inclui controllers NestJS e a aplicação Next.js. Traduz entradas e apresenta r
 
 - `apps/api`: shell mínimo da aplicação NestJS.
 - `apps/api/src/imports/etrack`: contrato lógico, validação e normalização técnica específicos do eTrack, ainda sem parser físico, endpoint, persistência ou caso de uso.
+- `apps/api/src/imports/ecomex`: contrato lógico, validação e normalização técnica específicos do eComex, ainda sem parser físico, endpoint, persistência ou caso de uso.
 - `apps/web`: shell mínimo da aplicação Next.js.
 - `packages/domain`: fronteira do domínio puro, ainda sem regras operacionais.
 
@@ -52,6 +53,19 @@ linha lógica eTrack
 ```
 
 Essa fronteira não interpreta observações, não classifica situações operacionais e não decide a aceitação total ou parcial de um lote. O formato físico da exportação permanece fora do contrato até que existam amostras confirmadas.
+
+### Fronteira eComex atual
+
+```text
+linha lógica eComex
+  -> validação de cabeçalhos e valores técnicos
+  -> normalização técnica
+  -> registro normalizado com origem, versão, linha, dados brutos e issues
+```
+
+Essa fronteira não classifica desvios, não interpreta `FIM` como estado de abertura, não correlaciona `EMBARQUE` com o eTrack e não decide a aceitação total ou parcial de um lote. O formato físico da exportação permanece fora do contrato até que existam amostras confirmadas.
+
+Os contratos e as implementações das duas fontes permanecem separados. A repetição observada em validação temporal, textos e issues foi mantida localmente nesta etapa. Uma possível extração será avaliada somente depois da comparação explícita entre as duas fronteiras na Etapa 5.
 
 ## Componentes futuros documentados
 
