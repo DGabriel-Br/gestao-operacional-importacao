@@ -1,0 +1,21 @@
+{
+  "name": "gestao-operacional-importacao",
+  "version": "0.0.0",
+  "private": true,
+  "packageManager": "pnpm@12.6.0",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "dev:api": "corepack pnpm --filter @gestao-operacional/api dev",
+    "dev:web": "corepack pnpm --filter @gestao-operacional/web dev",
+    "build": "corepack pnpm --recursive --if-present build",
+    "typecheck": "corepack pnpm --recursive --if-present typecheck",
+    "test": "corepack pnpm --recursive --if-present test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "prettier": "^3.6.0"
+  }
+}
