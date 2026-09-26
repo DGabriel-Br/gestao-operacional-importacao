@@ -1,6 +1,6 @@
 # Cenários de caracterização
 
-Estes cenários são exemplos documentais anonimizados para confrontar o comportamento relatado com a planilha atual. As famílias caracterizadas nas Etapas 6 a 10 possuem testes executáveis no pacote de domínio.
+Estes cenários são exemplos documentais anonimizados para confrontar o comportamento relatado com a planilha atual. As famílias caracterizadas nas Etapas 6 a 11 possuem testes executáveis no pacote de domínio.
 
 Os resultados chamados de `Relatado` derivam do briefing operacional da Etapa 2 em 2026-09-26. Eles ainda precisam de evidência reproduzível da planilha e aprovação humana antes de orientar testes de domínio.
 
@@ -528,6 +528,74 @@ A fonte da caracterização é a normalização, o catálogo conhecido, a preced
 
 A aba `Config` confirma `Fatura com Assinatura com cor diferente de azul (INV)` como entrada explícita `NON_BLOCKING`. A versão sem `(INV)` não está catalogada e recebe `BLOCKING` pelo fallback de descrição desconhecida. Esse cenário protege contra generalização automática entre as variantes.
 
+## Alerta operacional principal caracterizado na Etapa 11
+
+A fonte da caracterização é a ordem completa da fórmula `IFS` da coluna principal de alerta descrita pelo Mestre na Etapa 11 em 2026-09-26. Os resultados são reproduzidos em `packages/domain/src/operational-alerts/determine-operational-alert.spec.ts` e ainda aguardam aprovação de negócio. Cada cenário retorna somente um alerta principal.
+
+### Mapeamentos de etapa sem condição temporal concorrente
+
+| Cenário   | Etapa                   | Alerta caracterizado               | Reason code                         |
+| --------- | ----------------------- | ---------------------------------- | ----------------------------------- |
+| `SCN-096` | `REVIEW_OBSERVATION`    | `UNIDENTIFIED_EVENT`               | `STAGE_REQUIRES_OBSERVATION_REVIEW` |
+| `SCN-097` | `TYPING_ERROR`          | `TYPING_ERROR_REQUIRES_CORRECTION` | `TYPING_ERROR_PRESENT`              |
+| `SCN-098` | `CRITICAL_ANALYSIS`     | `CRITICAL_ANALYSIS_IN_PROGRESS`    | `ALERT_MAPPED_FROM_STAGE`           |
+| `SCN-099` | `AWAITING_TYPING`       | `READY_TO_SEND_TO_TYPING`          | `ALERT_MAPPED_FROM_STAGE`           |
+| `SCN-100` | `TYPING`                | `TYPING_IN_PROGRESS`               | `ALERT_MAPPED_FROM_STAGE`           |
+| `SCN-101` | `TYPING_COMPLETED`      | `NO_OPERATIONAL_ACTION`            | `NO_OPERATIONAL_ACTION_FOR_STAGE`   |
+| `SCN-102` | `AWAITING_MERCANTE`     | `NO_OPERATIONAL_ACTION`            | `NO_OPERATIONAL_ACTION_FOR_STAGE`   |
+| `SCN-103` | `READY_FOR_REVIEW`      | `READY_TO_SEND_TO_REVIEW`          | `ALERT_MAPPED_FROM_STAGE`           |
+| `SCN-104` | `IN_REVIEW`             | `AWAITING_REVIEW_RETURN`           | `ALERT_MAPPED_FROM_STAGE`           |
+| `SCN-105` | `AWAITING_REGISTRATION` | `READY_TO_REGISTER`                | `ALERT_MAPPED_FROM_STAGE`           |
+| `SCN-106` | `AWAITING_CCT`          | `AWAITING_CCT_OPENING`             | `ALERT_MAPPED_FROM_STAGE`           |
+
+`NO_OPERATIONAL_ACTION` descreve somente a coluna principal. `SCN-102` não caracteriza estado detalhado do Mercante, e `SCN-106` não caracteriza estado detalhado do CCT.
+
+### Pendência e contagens prontas
+
+| Cenário   | Contagens abertas recebidas  | Alerta caracterizado             | Reason code                                |
+| --------- | ---------------------------- | -------------------------------- | ------------------------------------------ |
+| `SCN-107` | 1 blocking, 0 non-blocking.  | `BLOCKING_DEVIATIONS_OPEN`       | `PENDING_HAS_BLOCKING_DEVIATIONS`          |
+| `SCN-108` | 3 blocking e 4 non-blocking. | `BLOCKING_DEVIATIONS_OPEN`       | `PENDING_HAS_BLOCKING_DEVIATIONS`          |
+| `SCN-109` | 0 blocking e 2 non-blocking. | `ONLY_NON_BLOCKING_DEVIATIONS`   | `PENDING_HAS_ONLY_NON_BLOCKING_DEVIATIONS` |
+| `SCN-110` | 0 blocking e 0 non-blocking. | `PENDING_WITHOUT_OPEN_DEVIATION` | `PENDING_HAS_NO_OPEN_DEVIATIONS`           |
+
+As quantidades permanecem em `evaluatedFacts`. O Domain não constrói frases com singular ou plural. As contagens já representam desvios abertos classificados; agregação, correlação, duplicidade e reabertura permanecem externas a esta política.
+
+### Precedência sobre ETA vencida
+
+Nos cenários seguintes, ETA é anterior à avaliação e chegada está ausente:
+
+| Cenário   | Etapa e composição                   | Alerta que prevalece               |
+| --------- | ------------------------------------ | ---------------------------------- |
+| `SCN-111` | `REVIEW_OBSERVATION`.                | `UNIDENTIFIED_EVENT`               |
+| `SCN-112` | `PENDING` com blocking.              | `BLOCKING_DEVIATIONS_OPEN`         |
+| `SCN-113` | `PENDING` somente com non-blocking.  | `ONLY_NON_BLOCKING_DEVIATIONS`     |
+| `SCN-114` | `PENDING` sem desvios nas contagens. | `PENDING_WITHOUT_OPEN_DEVIATION`   |
+| `SCN-115` | `TYPING_ERROR`.                      | `TYPING_ERROR_REQUIRES_CORRECTION` |
+
+`SCN-116` caracteriza que ETA vencida sem chegada substitui o mapeamento normal de `CRITICAL_ANALYSIS`, `AWAITING_TYPING`, `TYPING`, `AWAITING_MERCANTE`, `READY_FOR_REVIEW`, `IN_REVIEW`, `AWAITING_REGISTRATION`, `AWAITING_CCT` e `TYPING_COMPLETED` por `ETA_OVERDUE_WITHOUT_ARRIVAL`. `SCN-117` caracteriza que ETA vencida com chegada presente não produz esse alerta e deixa o mapeamento normal da etapa prevalecer.
+
+### Janela futura de zero a cinco dias
+
+| Cenário   | Etapa e diferença `ETA - avaliação`       | Chegada  | Alerta caracterizado                    |
+| --------- | ----------------------------------------- | -------- | --------------------------------------- |
+| `SCN-118` | `CRITICAL_ANALYSIS`, diferença 0.         | Ausente  | `PRIORITIZE_CRITICAL_ANALYSIS`          |
+| `SCN-119` | `CRITICAL_ANALYSIS`, diferença 5.         | Ausente  | `PRIORITIZE_CRITICAL_ANALYSIS`          |
+| `SCN-120` | `CRITICAL_ANALYSIS`, diferença 6.         | Ausente  | `CRITICAL_ANALYSIS_IN_PROGRESS`         |
+| `SCN-121` | `AWAITING_TYPING`, diferenças 5 e 6.      | Ausente  | Prioriza em 5; mapeia normalmente em 6. |
+| `SCN-122` | `TYPING`, diferenças 5 e 6.               | Ausente  | Prioriza em 5; mapeia normalmente em 6. |
+| `SCN-123` | `CRITICAL_ANALYSIS`, diferença 5.         | Presente | `PRIORITIZE_CRITICAL_ANALYSIS`          |
+| `SCN-124` | `AWAITING_MERCANTE`, diferença 0.         | Ausente  | `NO_OPERATIONAL_ACTION`                 |
+| `SCN-125` | `CRITICAL_ANALYSIS`, diferença negativa.  | Ausente  | `ETA_OVERDUE_WITHOUT_ARRIVAL`           |
+| `SCN-126` | ETA ausente nas três etapas priorizáveis. | Ausente  | Mapeamento normal da etapa.             |
+| `SCN-127` | Diferença 5 atravessando mês ou ano.      | Ausente  | Aplica a prioridade da etapa.           |
+
+`SCN-125` prova que criticidade `3` não é usada como atalho para a janela futura. Uma ETA vencida também pode ter criticidade `3`, mas pertence ao ramo anterior de overdue. `SCN-123` preserva que `hasArrival` não participa das três condições de prioridade futura.
+
+`SCN-128` caracteriza que contagens blocking ou non-blocking maiores que zero não alteram o alerta de stages diferentes de `PENDING`.
+
+Os cenários da Etapa 11 não classificam nem contam desvios, não determinam criticidade, não detalham Mercante, CCT ou BL e não ordenam o dashboard.
+
 ## Matriz mínima de cobertura
 
 | Comportamento solicitado                       | Cenário                                      |
@@ -571,3 +639,8 @@ A aba `Config` confirma `Fatura com Assinatura com cor diferente de azul (INV)` 
 | Normalização, fallback e ausência de descrição | `SCN-081` a `SCN-083`                        |
 | Contextos da fatura com assinatura             | `SCN-084` a `SCN-093`                        |
 | Lifecycle `OPEN` e `CLOSED`                    | `SCN-094`, `SCN-095`                         |
+| Mapeamento normal do alerta principal          | `SCN-096` a `SCN-106`                        |
+| Alertas de pendência por contagens             | `SCN-107` a `SCN-110`                        |
+| Precedência sobre ETA vencida                  | `SCN-111` a `SCN-117`                        |
+| Janela futura e independência da criticidade   | `SCN-118` a `SCN-127`                        |
+| Independência das contagens fora de pendência  | `SCN-128`                                    |

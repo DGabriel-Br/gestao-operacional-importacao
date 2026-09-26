@@ -45,6 +45,14 @@ export {
 } from './operational-criticality/determine-operational-criticality.js'
 
 export {
+  determineOperationalAlert,
+  type OperationalAlert,
+  type OperationalAlertDecision,
+  type OperationalAlertFacts,
+  type OperationalAlertReasonCode,
+} from './operational-alerts/determine-operational-alert.js'
+
+export {
   classifyDeviationImpact,
   type ClassifiedDeviationImpactDecision,
   type DeviationImpact,

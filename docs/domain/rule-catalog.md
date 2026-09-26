@@ -2,7 +2,7 @@
 
 Este catálogo descreve o comportamento atual relatado da ferramenta. Ele não é uma implementação, não define tipos finais e não aprova automaticamente cada comportamento como requisito futuro.
 
-Os comportamentos marcados como `Relatado` foram fornecidos no briefing operacional da Etapa 2 em 2026-09-26. As famílias `RULE-TRACK`, `RULE-EVENT`, `RULE-STAGE`, `RULE-CRIT` e `RULE-DEV` possuem caracterizações posteriores baseadas na lógica das fórmulas explicitamente descrita pelo Mestre.
+Os comportamentos marcados como `Relatado` foram fornecidos no briefing operacional da Etapa 2 em 2026-09-26. As famílias `RULE-TRACK`, `RULE-EVENT`, `RULE-STAGE`, `RULE-CRIT`, `RULE-DEV` e `RULE-ALERT` possuem caracterizações posteriores baseadas na lógica das fórmulas explicitamente descrita pelo Mestre.
 
 ## Como interpretar o catálogo
 
@@ -132,7 +132,7 @@ Essas equivalências documentam o comportamento, mas não definem textos de inte
 
 Somente `TYPING_COMPLETED` consulta modal e presença da referência Mercante. Os demais mapeamentos dependem apenas do evento. A política não determina status detalhado do Mercante, CCT, prontidão adicional, alerta, criticidade ou desvio.
 
-A precedência completa entre essa etapa derivada e futuras condições excepcionais permanece aberta.
+A precedência entre a etapa derivada e a coluna principal de alerta foi caracterizada na Etapa 11. A interação com documentos, sinais específicos de Mercante e outras dimensões continua aberta.
 
 ## Criticidade
 
@@ -239,24 +239,62 @@ Princípio caracterizado: descrição de desvio não é necessariamente suficien
 
 ## Alertas operacionais
 
-| Alerta relatado                     | Condição conhecida nesta etapa                                                                                                                        |
-| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Evento não identificado`           | Nenhum evento conhecido foi identificado.                                                                                                             |
-| `Erro na Digitação`                 | O alerta existe, mas seu gatilho e sua relação com `Erro ao gerar a DUIMP` ainda precisam ser caracterizados.                                         |
-| `Pendência sem desvio aberto`       | Etapa Pendência sem desvio aberto.                                                                                                                    |
-| `Desvio impeditivo aberto`          | Existe ao menos um desvio impeditivo aberto.                                                                                                          |
-| `ETA vencido e carga não chegada`   | ETA anterior à data de avaliação e `Data Chegada` ausente. O alerta ainda não foi implementado; separadamente, a criticidade legada desse caso é `3`. |
-| `Priorizar análise crítica`         | Gatilho ainda não detalhado.                                                                                                                          |
-| `Priorizar envio para digitação`    | Gatilho ainda não detalhado.                                                                                                                          |
-| `Priorizar digitação`               | Gatilho ainda não detalhado.                                                                                                                          |
-| `Pode encaminhar para digitação`    | Gatilho ainda não detalhado.                                                                                                                          |
-| `Processo em digitação`             | Gatilho ainda não detalhado.                                                                                                                          |
-| `Pode enviar para conferência`      | Gatilho ainda não detalhado.                                                                                                                          |
-| `Aguardando retorno da conferência` | Gatilho ainda não detalhado.                                                                                                                          |
-| `Pronto para registro`              | Gatilho ainda não detalhado.                                                                                                                          |
-| `Aguardando abertura do CCT`        | Associado ao fluxo aéreo, com condição exata ainda não detalhada.                                                                                     |
+**Fonte da caracterização**: ordem das condições da fórmula `IFS` da coluna de alerta principal descrita pelo Mestre na Etapa 11 em 2026-09-26 e reproduzida em `packages/domain/src/operational-alerts/determine-operational-alert.spec.ts`.
 
-Alertas e etapas podem coexistir. A lista não define severidade nem ordenação da fila.
+A política seleciona somente o primeiro alerta cuja condição é verdadeira. Ela não produz um conjunto de alertas simultâneos, não define severidade, não ordena o dashboard e não substitui etapa, criticidade, desvios ou dimensões documentais.
+
+### Catálogo do alerta principal
+
+| Código estável                     | Equivalente conceitual no legado                              |
+| ---------------------------------- | ------------------------------------------------------------- |
+| `UNIDENTIFIED_EVENT`               | Evento não identificado.                                      |
+| `BLOCKING_DEVIATIONS_OPEN`         | Um ou mais desvios impeditivos abertos.                       |
+| `ONLY_NON_BLOCKING_DEVIATIONS`     | Somente desvios não impeditivos; pode analisar as pendências. |
+| `PENDING_WITHOUT_OPEN_DEVIATION`   | Inconsistência: pendência sem desvio aberto.                  |
+| `TYPING_ERROR_REQUIRES_CORRECTION` | Corrigir erro ao gerar a DUIMP.                               |
+| `ETA_OVERDUE_WITHOUT_ARRIVAL`      | ETA vencido e carga não chegada.                              |
+| `PRIORITIZE_CRITICAL_ANALYSIS`     | Priorizar análise crítica.                                    |
+| `PRIORITIZE_SEND_TO_TYPING`        | Priorizar envio para digitação.                               |
+| `PRIORITIZE_TYPING`                | Priorizar digitação.                                          |
+| `CRITICAL_ANALYSIS_IN_PROGRESS`    | Em análise crítica.                                           |
+| `READY_TO_SEND_TO_TYPING`          | Pode encaminhar para digitação.                               |
+| `TYPING_IN_PROGRESS`               | Processo em digitação.                                        |
+| `NO_OPERATIONAL_ACTION`            | Sem ação operacional na coluna principal.                     |
+| `READY_TO_SEND_TO_REVIEW`          | Pode enviar para conferência.                                 |
+| `AWAITING_REVIEW_RETURN`           | Aguardando retorno da conferência.                            |
+| `READY_TO_REGISTER`                | Pronto para registro.                                         |
+| `AWAITING_CCT_OPENING`             | Aguardando abertura do CCT.                                   |
+
+Essas equivalências documentam o legado e não são textos de interface definidos pelo Domain.
+
+### Precedência caracterizada
+
+| ID               | Ordem | Condição                                                         | Alerta principal                   | Reason code                                  |
+| ---------------- | ----- | ---------------------------------------------------------------- | ---------------------------------- | -------------------------------------------- |
+| `RULE-ALERT-001` | 1     | Etapa `REVIEW_OBSERVATION`.                                      | `UNIDENTIFIED_EVENT`               | `STAGE_REQUIRES_OBSERVATION_REVIEW`          |
+| `RULE-ALERT-002` | 2     | Etapa `PENDING` e `blockingDeviationCount > 0`.                  | `BLOCKING_DEVIATIONS_OPEN`         | `PENDING_HAS_BLOCKING_DEVIATIONS`            |
+| `RULE-ALERT-003` | 3     | Etapa `PENDING`, sem blocking e `nonBlockingDeviationCount > 0`. | `ONLY_NON_BLOCKING_DEVIATIONS`     | `PENDING_HAS_ONLY_NON_BLOCKING_DEVIATIONS`   |
+| `RULE-ALERT-004` | 4     | Etapa `PENDING`, sem desvios nas duas contagens.                 | `PENDING_WITHOUT_OPEN_DEVIATION`   | `PENDING_HAS_NO_OPEN_DEVIATIONS`             |
+| `RULE-ALERT-005` | 5     | Etapa `TYPING_ERROR`.                                            | `TYPING_ERROR_REQUIRES_CORRECTION` | `TYPING_ERROR_PRESENT`                       |
+| `RULE-ALERT-006` | 6     | ETA existe, `ETA - avaliação < 0` e chegada está ausente.        | `ETA_OVERDUE_WITHOUT_ARRIVAL`      | `ETA_IS_OVERDUE_WITHOUT_ARRIVAL`             |
+| `RULE-ALERT-007` | 7     | `0 <= ETA - avaliação <= 5` e etapa `CRITICAL_ANALYSIS`.         | `PRIORITIZE_CRITICAL_ANALYSIS`     | `ETA_WITHIN_FIVE_DAYS_FOR_CRITICAL_ANALYSIS` |
+| `RULE-ALERT-008` | 8     | A mesma janela futura e etapa `AWAITING_TYPING`.                 | `PRIORITIZE_SEND_TO_TYPING`        | `ETA_WITHIN_FIVE_DAYS_FOR_AWAITING_TYPING`   |
+| `RULE-ALERT-009` | 9     | A mesma janela futura e etapa `TYPING`.                          | `PRIORITIZE_TYPING`                | `ETA_WITHIN_FIVE_DAYS_FOR_TYPING`            |
+| `RULE-ALERT-010` | 10    | Etapa `CRITICAL_ANALYSIS` fora do ramo de prioridade.            | `CRITICAL_ANALYSIS_IN_PROGRESS`    | `ALERT_MAPPED_FROM_STAGE`                    |
+| `RULE-ALERT-011` | 11    | Etapa `AWAITING_TYPING` fora do ramo de prioridade.              | `READY_TO_SEND_TO_TYPING`          | `ALERT_MAPPED_FROM_STAGE`                    |
+| `RULE-ALERT-012` | 12    | Etapa `TYPING` fora do ramo de prioridade.                       | `TYPING_IN_PROGRESS`               | `ALERT_MAPPED_FROM_STAGE`                    |
+| `RULE-ALERT-013` | 13    | Etapa `AWAITING_MERCANTE`.                                       | `NO_OPERATIONAL_ACTION`            | `NO_OPERATIONAL_ACTION_FOR_STAGE`            |
+| `RULE-ALERT-014` | 14    | Etapa `READY_FOR_REVIEW`.                                        | `READY_TO_SEND_TO_REVIEW`          | `ALERT_MAPPED_FROM_STAGE`                    |
+| `RULE-ALERT-015` | 15    | Etapa `IN_REVIEW`.                                               | `AWAITING_REVIEW_RETURN`           | `ALERT_MAPPED_FROM_STAGE`                    |
+| `RULE-ALERT-016` | 16    | Etapa `AWAITING_REGISTRATION`.                                   | `READY_TO_REGISTER`                | `ALERT_MAPPED_FROM_STAGE`                    |
+| `RULE-ALERT-017` | 17    | Etapa `AWAITING_CCT`.                                            | `AWAITING_CCT_OPENING`             | `ALERT_MAPPED_FROM_STAGE`                    |
+| `RULE-ALERT-018` | 18    | Etapa `TYPING_COMPLETED`, único stage atual restante.            | `NO_OPERATIONAL_ACTION`            | `NO_OPERATIONAL_ACTION_FOR_STAGE`            |
+
+As contagens recebidas representam desvios abertos com impacto já classificado. A política não recebe listas, não determina lifecycle, não classifica, não correlaciona e não conta desvios. Para stages diferentes de `PENDING`, as contagens não alteram o alerta.
+
+A janela de prioridade futura usa dias corridos e exige diferença entre zero e cinco, inclusive. Ela não usa criticidade `3`, pois essa criticidade também inclui ETA vencida. As três condições de prioridade futura não consultam chegada; chegada presente não desativa a prioridade caracterizada. ETA ausente não produz overdue nem prioridade.
+
+`NO_OPERATIONAL_ACTION` afirma somente que a coluna principal não indica ação. Ela não elimina possíveis sinais específicos de Mercante, CCT ou documentos.
 
 ## Mercante
 
@@ -377,8 +415,9 @@ Estas precedências são locais. Elas não formam uma ordem global de avaliaçã
 5. Na etapa `Pendência`, ausência total de desvios abertos determina inconsistência.
 6. Depois de `Digitação OK`, regras do modal podem substituir a etapa direta por uma espera específica ou prontidão.
 7. Na criticidade, ETA ausente encerra a avaliação sem nível numérico; com ETA presente, chegada tem precedência sobre as faixas de diferença; sem chegada, aplicam-se em ordem os limites `<= 5`, `<= 7` e `> 7`.
+8. No alerta principal, aplica-se integralmente a ordem 1 a 18 da seção `Alertas operacionais`; `REVIEW_OBSERVATION`, todos os ramos de `PENDING` e `TYPING_ERROR` precedem ETA vencida, que precede prioridades futuras e mapeamentos normais da etapa.
 
-A ordem global entre evento, etapa, criticidade, alertas, documentos, desvios e exceções ainda precisa ser caracterizada.
+A seleção da coluna principal de alerta foi caracterizada. A ordem global entre essa saída, documentos, sinais específicos de Mercante, prioridades de dashboard e outras dimensões ainda precisa ser caracterizada.
 
 ## Princípios de modelagem aprovados
 
