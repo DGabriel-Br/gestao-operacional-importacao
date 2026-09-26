@@ -2,7 +2,9 @@
 
 Este documento descreve o significado atualmente conhecido dos dados externos. Ele não define schemas Zod, DTOs, tabelas ou nomes de propriedades TypeScript.
 
-Os campos e usos descritos foram fornecidos no briefing operacional de 2026-09-26. Nenhum arquivo real do eTrack ou eComex foi inspecionado nesta etapa.
+Os campos e usos descritos foram fornecidos no briefing operacional de 2026-09-26. Nenhum arquivo real do eTrack ou eComex foi inspecionado nas Etapas 2 e 3.
+
+A Etapa 3 implementou e verificou um contrato lógico para linhas do eTrack. Isso confirma o comportamento técnico do código, mas não caracteriza o formato físico nem as regras operacionais da ferramenta atual.
 
 ## Fluxo observado
 
@@ -19,16 +21,16 @@ A camada `Processamento` da planilha concentra hoje o comportamento mais próxim
 
 ## Áreas conceituais da planilha atual
 
-| Área                  | Responsabilidade observada                                       | Situação nesta etapa                                        |
-| --------------------- | ---------------------------------------------------------------- | ----------------------------------------------------------- |
-| Dashboard             | Apresentar indicadores e visão operacional.                      | Identificada, sem detalhamento de métricas.                 |
-| Controle Pós-Registro | Acompanhar processos registrados e ainda não faturados.          | Parcialmente relatada.                                      |
-| Controle de Desvios   | Apresentar e acompanhar desvios vindos principalmente do eComex. | Parcialmente relatada.                                      |
-| Previsão de Débitos   | Projetar débitos operacionais.                                   | Apenas identificada.                                        |
-| Importação eComex     | Receber dados de desvios.                                        | Campos conhecidos, formato físico não fornecido.            |
-| Importação eTrack     | Receber dados dos processos.                                     | Campos conhecidos, formato físico não fornecido.            |
-| Configuração          | Manter parâmetros usados pelo processamento atual.               | Conteúdo ainda não inventariado.                            |
-| Processamento         | Transformar dados em estados, prioridades, alertas e controles.  | Principal referência para futura caracterização do domínio. |
+| Área                  | Responsabilidade observada                                       | Situação nesta etapa                                                  |
+| --------------------- | ---------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Dashboard             | Apresentar indicadores e visão operacional.                      | Identificada, sem detalhamento de métricas.                           |
+| Controle Pós-Registro | Acompanhar processos registrados e ainda não faturados.          | Parcialmente relatada.                                                |
+| Controle de Desvios   | Apresentar e acompanhar desvios vindos principalmente do eComex. | Parcialmente relatada.                                                |
+| Previsão de Débitos   | Projetar débitos operacionais.                                   | Apenas identificada.                                                  |
+| Importação eComex     | Receber dados de desvios.                                        | Campos conhecidos, formato físico não fornecido.                      |
+| Importação eTrack     | Receber dados dos processos.                                     | Contrato lógico implementado e testado; formato físico não fornecido. |
+| Configuração          | Manter parâmetros usados pelo processamento atual.               | Conteúdo ainda não inventariado.                                      |
+| Processamento         | Transformar dados em estados, prioridades, alertas e controles.  | Principal referência para futura caracterização do domínio.           |
 
 ## eTrack
 
@@ -47,6 +49,27 @@ A camada `Processamento` da planilha concentra hoje o comportamento mais próxim
 | SRC-ETRACK-011 | `Master`                      | Referência documental do processo.                                                                                | Formato, cardinalidade e relação com House e embarque.                     |
 | SRC-ETRACK-012 | `Agente`                      | Agente associado ao processo e parte do padrão observado para candidatos FEDEX.                                   | Significado de valor vazio e fonte autoritativa.                           |
 | SRC-ETRACK-013 | `Data do Faturamento`         | Evidência de faturamento, usada para delimitar o controle pós-registro.                                           | Formato, fuso e possíveis estados de correção ou cancelamento.             |
+
+### Contrato técnico executável da Etapa 3
+
+O contrato canônico executável está em `apps/api/src/imports/etrack/etrack-contract.ts`. Seu consumidor atual é o normalizador específico do eTrack na mesma pasta.
+
+Comportamentos técnicos implementados e verificados:
+
+- `Numero do Processo` é o único cabeçalho obrigatório para que uma coleção de colunas represente uma fonte eTrack identificável nesta etapa;
+- os demais cabeçalhos conhecidos são opcionais e suas células podem estar ausentes ou vazias;
+- nomes de cabeçalho são reconhecidos exatamente como documentados, sem aliases, correção de caixa ou remoção de acentos;
+- cabeçalhos adicionais são aceitos e os respectivos valores permanecem nos dados brutos da linha;
+- `Numero do Processo`, `Referencia Cliente`, `House`, `Master` e `Nº CE MERCANTE` são projetados como texto e nunca como número;
+- espaços externos são removidos dos campos textuais estruturados;
+- `Observações` é preservado integralmente quando contém texto, incluindo espaços externos, acentuação, pontuação e quebras de linha; células compostas somente por espaços representam ausência técnica;
+- datas lógicas distinguem ausência, data, data e hora e valor inválido;
+- o contrato lógico reconhece somente representações ISO nesta etapa, preserva offsets recebidos e não cria horário nem converte fuso;
+- `Aérea` e `Marítima` possuem representação técnica conhecida; outros textos de `Via Transporte` são preservados como desconhecidos e geram issue não fatal;
+- cada resultado preserva fonte, versão da fonte, número da linha, registro bruto recebido, projeção normalizada e issues;
+- erros esperados de dados são representados como issues, sem decidir se o lote será aceito total ou parcialmente.
+
+Essas garantias têm estado `Implementado` e `Verificado` apenas para o contrato técnico. Elas não mudam para `Caracterizado` os significados relatados dos campos nem confirmam quais formatos uma exportação real produzirá.
 
 ## eComex
 

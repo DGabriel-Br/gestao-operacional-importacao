@@ -4,22 +4,24 @@ Aplicação web para gestão operacional de processos de importação. O projeto
 
 ## Estado atual
 
-O repositório contém somente a fundação técnica da Etapa 1:
+O repositório contém a fundação técnica e a primeira fronteira de ingestão:
 
 - monorepo com pnpm workspaces;
 - aplicação NestJS mínima, sem endpoints de negócio;
 - aplicação Next.js mínima, sem telas de negócio;
 - pacote de domínio vazio de regras operacionais;
-- documentação arquitetural e ADRs aprovados;
-- typecheck e testes básicos.
+- documentação de arquitetura e descoberta do domínio;
+- contrato lógico e normalização técnica de linhas do eTrack;
+- rastreabilidade e issues por linha na ingestão do eTrack;
+- typecheck e testes automatizados.
 
-Importação, banco de dados, regras operacionais, autenticação e infraestrutura ainda não foram implementados.
+O formato físico da exportação eTrack ainda não foi definido. A ingestão não lê CSV, XLSX ou sistemas externos, não persiste dados e não executa regras operacionais. eComex, banco de dados, autenticação e demais integrações ainda não foram implementados.
 
 ## Estrutura
 
 ```text
 apps/
-  api/                 API NestJS e futuro composition root
+  api/                 API NestJS, composition root e integrações específicas
   web/                 Aplicação Next.js
 packages/
   domain/              Regras de negócio puras

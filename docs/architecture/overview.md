@@ -36,10 +36,22 @@ Inclui controllers NestJS e a aplicação Next.js. Traduz entradas e apresenta r
 ## Componentes atuais
 
 - `apps/api`: shell mínimo da aplicação NestJS.
+- `apps/api/src/imports/etrack`: contrato lógico, validação e normalização técnica específicos do eTrack, ainda sem parser físico, endpoint, persistência ou caso de uso.
 - `apps/web`: shell mínimo da aplicação Next.js.
 - `packages/domain`: fronteira do domínio puro, ainda sem regras operacionais.
 
 Nenhum outro pacote foi criado porque ainda não existe uso concreto.
+
+### Fronteira eTrack atual
+
+```text
+linha lógica eTrack
+  -> validação de cabeçalhos e valores técnicos
+  -> normalização técnica
+  -> registro normalizado com origem, versão, linha, dados brutos e issues
+```
+
+Essa fronteira não interpreta observações, não classifica situações operacionais e não decide a aceitação total ou parcial de um lote. O formato físico da exportação permanece fora do contrato até que existam amostras confirmadas.
 
 ## Componentes futuros documentados
 
