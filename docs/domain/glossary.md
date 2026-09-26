@@ -35,14 +35,15 @@ As definições marcadas como `Relatado` derivam do briefing operacional de 2026
 
 ## Desvios
 
-| ID       | Termo preferido       | Definição atual                                                                                                   | Não confundir com                     | Estado   |
-| -------- | --------------------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------- | -------- |
-| TERM-020 | Desvio                | Ocorrência operacional vinda do eComex e descrita por campos como `DESCR_DESVIO`, `INICIO`, `FIM` e observações.  | Descrição ou classificação do desvio. | Relatado |
-| TERM-021 | Descrição do desvio   | Texto `DESCR_DESVIO` do eComex. Pode ser insuficiente para determinar o impacto.                                  | Impacto do desvio.                    | Relatado |
-| TERM-022 | Desvio aberto         | Desvio sem valor em `FIM` no comportamento atual relatado. Apenas desvios abertos entram na contagem operacional. | Desvio impeditivo.                    | Relatado |
-| TERM-023 | Impacto do desvio     | Classificação operacional `Impeditivo` ou `Não impeditivo`. Pode depender da descrição e de contexto adicional.   | Estado aberto ou encerrado.           | Relatado |
-| TERM-024 | Desvio impeditivo     | Desvio aberto cujo impacto bloqueia o avanço operacional conforme as regras atuais.                               | Pendência no Mercante.                | Relatado |
-| TERM-025 | Desvio não impeditivo | Desvio aberto que não bloqueia automaticamente o avanço operacional.                                              | Desvio encerrado.                     | Relatado |
+| ID       | Termo preferido       | Definição atual                                                                                                                                               | Não confundir com                     | Estado        |
+| -------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | ------------- |
+| TERM-020 | Desvio                | Ocorrência operacional vinda do eComex e descrita por campos como `DESCR_DESVIO`, `INICIO`, `FIM` e observações.                                              | Descrição ou classificação do desvio. | Relatado      |
+| TERM-021 | Descrição do desvio   | Texto interpretado pela política de impacto após normalização legada específica. Pode ser insuficiente sem o contexto da observação.                          | Impacto do desvio.                    | Caracterizado |
+| TERM-022 | Desvio aberto         | Desvio cujo fato de encerramento está confirmadamente ausente. Recebe lifecycle `OPEN`; sua contagem por processo pertence a uma política posterior.          | Desvio impeditivo.                    | Caracterizado |
+| TERM-023 | Impacto do desvio     | Classificação individual `BLOCKING` ou `NON_BLOCKING`, independente do lifecycle. Pode resultar do catálogo, de contexto ou do fallback legado.               | Estado aberto ou encerrado.           | Caracterizado |
+| TERM-024 | Desvio impeditivo     | Desvio individual cujo impacto foi classificado como `BLOCKING`. Seu efeito agregado sobre um processo não é determinado nesta família.                       | Pendência no Mercante.                | Caracterizado |
+| TERM-025 | Desvio não impeditivo | Desvio individual cujo impacto foi classificado como `NON_BLOCKING`. Isso não afirma que esteja aberto, encerrado ou associado a determinado processo.        | Desvio encerrado.                     | Caracterizado |
+| TERM-042 | Desvio encerrado      | Desvio cujo fato de encerramento está confirmadamente presente. Recebe lifecycle `CLOSED`; conteúdo e validade técnica de `FIM` são tratados antes do Domain. | Desvio não impeditivo.                | Caracterizado |
 
 ## Documentos e controles modais
 

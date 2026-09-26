@@ -73,19 +73,19 @@ Essas garantias têm estado `Implementado` e `Verificado` apenas para o contrato
 
 ## eComex
 
-| ID             | Campo externo   | Significado ou uso observado                                                                   | Ainda não determinado                                                   |
-| -------------- | --------------- | ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| SRC-ECOMEX-001 | `EMBARQUE`      | Principal referência atualmente usada para relacionar desvios ao embarque do eTrack.           | Se é chave definitiva, única ou suficiente.                             |
-| SRC-ECOMEX-002 | `MODAL`         | Modal informado no contexto do desvio.                                                         | Vocabulário possível e precedência em divergência com `Via Transporte`. |
-| SRC-ECOMEX-003 | `DESCR_DESVIO`  | Descrição do desvio. Participa da classificação de impacto, mas pode ser insuficiente sozinha. | Normalização exata, catálogo completo e estabilidade dos textos.        |
-| SRC-ECOMEX-004 | `INICIO`        | Início do desvio.                                                                              | Formato, fuso e participação em ordenação ou duplicidade.               |
-| SRC-ECOMEX-005 | `FIM`           | No comportamento atual, sua ausência indica desvio aberto.                                     | Semântica de valores inválidos, reabertura e divergência com conclusão. |
-| SRC-ECOMEX-006 | `OBSERVACOES`   | Contexto textual do desvio. Pode alterar a classificação operacional de certas descrições.     | Padrões reconhecidos, ordem e precedência.                              |
-| SRC-ECOMEX-007 | `JUSTIFICATIVA` | Justificativa registrada para o desvio.                                                        | Uso atual no processamento e obrigatoriedade.                           |
-| SRC-ECOMEX-008 | `APONTADO_POR`  | Responsável pelo apontamento.                                                                  | Uso atual no domínio e formato de identificação.                        |
-| SRC-ECOMEX-009 | `CONCLUIDO_POR` | Responsável informado na conclusão.                                                            | Relação com `FIM` e tratamento de combinações inconsistentes.           |
-| SRC-ECOMEX-010 | `EXPORT_NOME`   | Campo de origem relacionado à exportação.                                                      | Significado operacional e participação em identidade ou correlação.     |
-| SRC-ECOMEX-011 | `INVOICE`       | Referência de fatura associada ao desvio.                                                      | Cardinalidade, formato e relação com processo e embarque.               |
+| ID             | Campo externo   | Significado ou uso observado                                                                   | Ainda não determinado                                                                                                    |
+| -------------- | --------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| SRC-ECOMEX-001 | `EMBARQUE`      | Principal referência atualmente usada para relacionar desvios ao embarque do eTrack.           | Se é chave definitiva, única ou suficiente.                                                                              |
+| SRC-ECOMEX-002 | `MODAL`         | Modal informado no contexto do desvio.                                                         | Vocabulário possível e precedência em divergência com `Via Transporte`.                                                  |
+| SRC-ECOMEX-003 | `DESCR_DESVIO`  | Descrição do desvio. Participa da classificação de impacto, mas pode ser insuficiente sozinha. | A normalização de impacto foi caracterizada na Etapa 10; catálogo completo e estabilidade dos textos permanecem abertos. |
+| SRC-ECOMEX-004 | `INICIO`        | Início do desvio.                                                                              | Formato, fuso e participação em ordenação ou duplicidade.                                                                |
+| SRC-ECOMEX-005 | `FIM`           | No comportamento atual, sua ausência indica desvio aberto.                                     | Semântica de valores inválidos, reabertura e divergência com conclusão.                                                  |
+| SRC-ECOMEX-006 | `OBSERVACOES`   | Contexto textual do desvio. Pode alterar a classificação operacional de certas descrições.     | Seis padrões e sua precedência foram caracterizados na Etapa 10; outros conteúdos permanecem abertos.                    |
+| SRC-ECOMEX-007 | `JUSTIFICATIVA` | Justificativa registrada para o desvio.                                                        | Uso atual no processamento e obrigatoriedade.                                                                            |
+| SRC-ECOMEX-008 | `APONTADO_POR`  | Responsável pelo apontamento.                                                                  | Uso atual no domínio e formato de identificação.                                                                         |
+| SRC-ECOMEX-009 | `CONCLUIDO_POR` | Responsável informado na conclusão.                                                            | Relação com `FIM` e tratamento de combinações inconsistentes.                                                            |
+| SRC-ECOMEX-010 | `EXPORT_NOME`   | Campo de origem relacionado à exportação.                                                      | Significado operacional e participação em identidade ou correlação.                                                      |
+| SRC-ECOMEX-011 | `INVOICE`       | Referência de fatura associada ao desvio.                                                      | Cardinalidade, formato e relação com processo e embarque.                                                                |
 
 ### Contrato técnico executável da Etapa 4
 
@@ -142,7 +142,7 @@ Na arquitetura futura existem duas responsabilidades distintas:
 1. A integração poderá normalizar aspectos técnicos, como encoding, espaços, cabeçalhos e formatos de data.
 2. O domínio interpretará o significado operacional de eventos, desvios, exceções e documentos.
 
-O algoritmo de normalização usado exclusivamente para reconhecer o evento operacional foi caracterizado na Etapa 7. Ele não se torna um normalizador universal e não caracteriza os algoritmos textuais de Mercante, documentos, desvios ou outras famílias.
+O algoritmo de normalização usado exclusivamente para reconhecer o evento operacional foi caracterizado na Etapa 7. A normalização de impacto de desvios foi caracterizada separadamente na Etapa 10. Nenhum deles se torna normalizador universal nem caracteriza os algoritmos textuais de Mercante, documentos ou outras famílias.
 
 ## Ausência, desconhecimento e inconsistência
 

@@ -40,7 +40,7 @@ Inclui controllers NestJS e a aplicação Next.js. Traduz entradas e apresenta r
 - `apps/api/src/imports/ecomex`: contrato lógico, validação e normalização técnica específicos do eComex, ainda sem parser físico, endpoint, persistência ou caso de uso.
 - `apps/api/src/imports/shared`: representação e parsing técnico de datas ISO, compartilhados apenas porque possuem semântica idêntica nas duas fronteiras.
 - `apps/web`: shell mínimo da aplicação Next.js.
-- `packages/domain`: domínio puro com a elegibilidade para acompanhamento operacional, o reconhecimento do evento operacional, a determinação da etapa operacional e a criticidade operacional, mantendo essas dimensões independentes.
+- `packages/domain`: domínio puro com a elegibilidade para acompanhamento operacional, o reconhecimento do evento operacional, a determinação da etapa operacional, a criticidade operacional e as decisões individuais de impacto e lifecycle de desvios, mantendo essas dimensões independentes.
 
 Nenhum outro pacote foi criado porque ainda não existe uso concreto.
 
@@ -88,6 +88,8 @@ O reconhecimento de evento operacional também ocorre no domínio. Sua normaliza
 A determinação da etapa recebe esse evento já reconhecido. Somente `TYPING_COMPLETED` recebe também modal de domínio e presença da referência Mercante. Essa política não relê observações, não conhece os vocabulários das fontes e não determina alertas, criticidade, desvios ou o status detalhado do Mercante.
 
 A criticidade recebe ETA civil válida ou ausência confirmada, presença de chegada e data civil de avaliação explícita. A política usa dias corridos do calendário gregoriano, não acessa relógio global e não determina prioridade, alerta ou ordenação da fila.
+
+A classificação de um desvio individual recebe descrição e observação preservadas por uma futura camada de mapeamento. Sua normalização textual é específica dessa família, reproduz somente o catálogo e os contextos caracterizados e não depende do contrato eComex. Separadamente, o lifecycle recebe apenas presença ou ausência de encerramento já validada. Nenhuma dessas políticas correlaciona fontes, agrega desvios, conta ocorrências ou gera alertas.
 
 ## Verificação arquitetural
 

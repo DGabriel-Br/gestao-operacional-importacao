@@ -2,7 +2,7 @@
 
 Este catálogo descreve o comportamento atual relatado da ferramenta. Ele não é uma implementação, não define tipos finais e não aprova automaticamente cada comportamento como requisito futuro.
 
-Os comportamentos marcados como `Relatado` foram fornecidos no briefing operacional da Etapa 2 em 2026-09-26. As famílias `RULE-TRACK`, `RULE-EVENT`, `RULE-STAGE` e `RULE-CRIT` possuem caracterizações posteriores baseadas na lógica das fórmulas explicitamente descrita pelo Mestre.
+Os comportamentos marcados como `Relatado` foram fornecidos no briefing operacional da Etapa 2 em 2026-09-26. As famílias `RULE-TRACK`, `RULE-EVENT`, `RULE-STAGE`, `RULE-CRIT` e `RULE-DEV` possuem caracterizações posteriores baseadas na lógica das fórmulas explicitamente descrita pelo Mestre.
 
 ## Como interpretar o catálogo
 
@@ -166,44 +166,68 @@ A diferença possui sinal e não recebe valor absoluto ou limite mínimo. Por is
 
 ## Desvios
 
-### Abertura e contagem
+**Fonte da caracterização**: normalização, catálogo conhecido, precedência contextual e fallback da fórmula descritos pelo Mestre na Etapa 10 em 2026-09-26 e reproduzidos em `packages/domain/src/deviations/`.
 
-| ID           | Comportamento atual relatado            | Resultado                                            | Estado e lacunas                                                                         |
-| ------------ | --------------------------------------- | ---------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| RULE-DEV-001 | `FIM` está ausente.                     | O desvio é considerado aberto.                       | Relatado. Combinações com `CONCLUIDO_POR`, reabertura e valores inválidos estão abertas. |
-| RULE-DEV-002 | Desvio está aberto.                     | Entra na contagem operacional.                       | Relatado.                                                                                |
-| RULE-DEV-003 | Desvio possui `FIM`.                    | Não entra na contagem de desvios abertos.            | Relatado.                                                                                |
-| RULE-DEV-004 | Descrição e contexto estão disponíveis. | O impacto pode ser `Impeditivo` ou `Não impeditivo`. | Relatado. O catálogo completo e o tratamento de duplicidade estão abertos.               |
+Impacto e lifecycle são dimensões independentes de um desvio individual. Esta família não correlaciona fontes, não agrega desvios por processo, não produz contagens e não gera alertas.
 
-### Exemplos atualmente não impeditivos
+### Lifecycle individual
 
-- `Problema no Mercante`;
-- `Falta Packing List`;
-- `Documentos originais não recebidos do Agente de Carga`;
-- `Avarias antes do registro da DI`;
-- `Falta certificado de origem`;
-- `Fatura com Assinatura com cor diferente de azul`.
+| ID           | Fato válido recebido pelo Domain       | Resultado                                  | Estado e limites                                                                                                                                          |
+| ------------ | -------------------------------------- | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| RULE-DEV-001 | Encerramento confirmadamente ausente.  | Lifecycle `OPEN`.                          | Caracterizado, não aprovado. A futura fronteira não pode converter `FIM` inválido em ausência.                                                            |
+| RULE-DEV-002 | Desvio está `OPEN`.                    | Entra futuramente na contagem operacional. | Relatado, não implementado. A contagem e a correlação por processo permanecem fora desta família.                                                         |
+| RULE-DEV-003 | Encerramento confirmadamente presente. | Lifecycle `CLOSED`.                        | Caracterizado, não aprovado. A exclusão de contagens abertas continua relatada; `CONCLUIDO_POR`, conteúdo da data e reabertura não participam da decisão. |
 
-### Exemplos atualmente impeditivos
+### Catálogo de impacto caracterizado
 
-- `Divergência de peso entre fatura e Packing List`;
-- `Preço divergente`;
-- `Correção do B/L / AWB`;
-- `Divergência de peso bruto entre HAWB/HBL e Invoice`;
-- `Divergência entre HAWB/BL e Faturas`;
-- `Falta lançar linhas no eComex`;
-- `Divergência na condição de pagamento entre fatura e pedido`.
+| Descrição configurada                                        | Impacto individual                                       |
+| ------------------------------------------------------------ | -------------------------------------------------------- |
+| `Problema no Mercante`                                       | `NON_BLOCKING`                                           |
+| `Falta Packing List`                                         | `NON_BLOCKING`                                           |
+| `Documentos originais não recebidos do Agente de Carga`      | `NON_BLOCKING`                                           |
+| `Avarias antes do registro da DI`                            | `NON_BLOCKING`                                           |
+| `Falta certificado de origem`                                | `NON_BLOCKING`                                           |
+| `Fatura com Assinatura com cor diferente de azul (INV)`      | `NON_BLOCKING`                                           |
+| `Divergência de peso entre fatura e Packing List`            | `BLOCKING`                                               |
+| `Preço divergente`                                           | `BLOCKING`                                               |
+| `Correção do B/L / AWB`                                      | `BLOCKING`                                               |
+| `Falta recebimento de fatura com assinatura`                 | `BLOCKING` por padrão, sujeito à regra contextual abaixo |
+| `Divergência de peso bruto entre HAWB/HBL e Invoice`         | `BLOCKING`                                               |
+| `Divergência entre HAWB/BL e Faturas`                        | `BLOCKING`                                               |
+| `Falta lançar linhas no eComex`                              | `BLOCKING`                                               |
+| `Divergência na condição de pagamento entre fatura e pedido` | `BLOCKING`                                               |
 
-As listas acima são exemplos relatados. Não são catálogos completos nem definem correspondência literal, normalizada ou aproximada.
+Esse catálogo caracteriza somente as descrições já registradas no repositório. Sua completude ainda precisa ser validada contra a aba `Config`. A configuração operacional atual confirma exatamente `Fatura com Assinatura com cor diferente de azul (INV)` como `NON_BLOCKING`. A versão sem o sufixo não foi generalizada e, sem outra evidência, recebe o fallback legado para descrição desconhecida.
 
-### Classificação contextual
+### Normalização caracterizada para impacto
 
-| ID           | Condição relatada                                             | Resultado                                                 | Estado e lacunas                                                     |
-| ------------ | ------------------------------------------------------------- | --------------------------------------------------------- | -------------------------------------------------------------------- |
-| RULE-DEV-005 | Descrição `Falta recebimento de fatura com assinatura`.       | O impacto não pode ser determinado apenas pela descrição. | Relatado.                                                            |
-| RULE-DEV-006 | A mesma descrição possui contexto diferente em `OBSERVACOES`. | Pode ser impeditiva ou não impeditiva.                    | Relatado. Os padrões contextuais exatos precisam ser caracterizados. |
+Na ordem observada, a descrição, a observação e as descrições configuradas:
 
-Princípio catalogado: descrição de desvio não é necessariamente suficiente para determinar impacto operacional.
+1. são convertidas para minúsculas;
+2. têm caracteres de controle ASCII equivalentes a `CLEAN` removidos;
+3. têm espaço não separável convertido para espaço comum;
+4. perdem o prefixo inicial exato `Desvio:` quando presente;
+5. aplicam os mapas de acentos portugueses e `ç -> c`;
+6. substituem caracteres fora de `a-z`, `0-9` e espaço por espaço;
+7. colapsam espaços e aplicam `trim`.
+
+A comparação de descrição é igualdade entre valores normalizados. Não há fuzzy matching, sinônimos, stemming ou correção ortográfica. As chaves normalizadas do catálogo atual são únicas.
+
+### Classificação contextual e fallbacks
+
+| ID           | Condição caracterizada                                                                                                                 | Resultado                                   | Reason code                                 |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- | ------------------------------------------- |
+| RULE-DEV-004 | Descrição útil corresponde a uma entrada do catálogo após normalização.                                                                | Impacto da entrada.                         | `IMPACT_FROM_EXPLICIT_CATALOG`              |
+| RULE-DEV-005 | Descrição especial e observação corresponde, nesta ordem, a `nao veio`, `nao recebida` ou `nao enviada`, seguida de `pre alerta`.      | `BLOCKING`.                                 | `SIGNED_INVOICE_MISSING_FROM_PRE_ALERT`     |
+| RULE-DEV-006 | Descrição especial sem contexto de pré-alerta e observação contém `fatura com assinatura`, `fatura assinada` ou `enviar ... assinada`. | `NON_BLOCKING`.                             | `SIGNED_INVOICE_NON_BLOCKING_CONTEXT`       |
+| RULE-DEV-007 | A observação da descrição especial satisfaz as duas famílias contextuais.                                                              | `BLOCKING`.                                 | `SIGNED_INVOICE_MISSING_FROM_PRE_ALERT`     |
+| RULE-DEV-008 | A descrição especial não possui padrão contextual reconhecido.                                                                         | `BLOCKING` pelo catálogo explícito.         | `IMPACT_FROM_EXPLICIT_CATALOG`              |
+| RULE-DEV-009 | A descrição possui conteúdo útil, mas não corresponde ao catálogo.                                                                     | `BLOCKING` pelo fallback legado.            | `UNKNOWN_DESCRIPTION_DEFAULTED_TO_BLOCKING` |
+| RULE-DEV-010 | A descrição está ausente ou não possui conteúdo útil após normalização.                                                                | Impacto não classificado e issue explícita. | `MISSING_DEVIATION_DESCRIPTION`             |
+
+A regra de pré-alerta é avaliada antes do contexto não impeditivo. O contexto especial só se aplica a `Falta recebimento de fatura com assinatura`; observações semelhantes não alteram outras descrições.
+
+Princípio caracterizado: descrição de desvio não é necessariamente suficiente para determinar impacto operacional. O fallback impeditivo de descrição desconhecida reproduz o legado e ainda precisa de aprovação como regra futura.
 
 ## Pendência e desvios
 

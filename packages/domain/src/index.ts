@@ -43,3 +43,25 @@ export {
   type OperationalCriticalityReasonCode,
   type UnclassifiedOperationalCriticalityDecision,
 } from './operational-criticality/determine-operational-criticality.js'
+
+export {
+  classifyDeviationImpact,
+  type ClassifiedDeviationImpactDecision,
+  type DeviationImpact,
+  type DeviationImpactContext,
+  type DeviationImpactDecision,
+  type DeviationImpactEvidence,
+  type DeviationImpactEvidenceSource,
+  type DeviationImpactFacts,
+  type DeviationImpactIssue,
+  type DeviationImpactReasonCode,
+  type UnclassifiedDeviationImpactDecision,
+} from './deviations/classify-deviation-impact.js'
+
+export {
+  determineDeviationLifecycle,
+  type DeviationLifecycle,
+  type DeviationLifecycleDecision,
+  type DeviationLifecycleFacts,
+  type DeviationLifecycleReasonCode,
+} from './deviations/determine-deviation-lifecycle.js'

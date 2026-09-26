@@ -1,6 +1,6 @@
 # Cenários de caracterização
 
-Estes cenários são exemplos documentais anonimizados para confrontar o comportamento relatado com a planilha atual. As famílias caracterizadas nas Etapas 6 a 9 possuem testes executáveis no pacote de domínio.
+Estes cenários são exemplos documentais anonimizados para confrontar o comportamento relatado com a planilha atual. As famílias caracterizadas nas Etapas 6 a 10 possuem testes executáveis no pacote de domínio.
 
 Os resultados chamados de `Relatado` derivam do briefing operacional da Etapa 2 em 2026-09-26. Eles ainda precisam de evidência reproduzível da planilha e aprovação humana antes de orientar testes de domínio.
 
@@ -473,42 +473,101 @@ A fonte da caracterização é a ordem das condições e os limites da fórmula 
 
 Não há alerta, prioridade ou ordenação nos cenários `SCN-049` a `SCN-066`.
 
+## Desvios individuais caracterizados na Etapa 10
+
+A fonte da caracterização é a normalização, o catálogo conhecido, a precedência contextual e o fallback da fórmula descritos pelo Mestre na Etapa 10 em 2026-09-26. Os resultados são reproduzidos em `packages/domain/src/deviations/` e ainda aguardam aprovação de negócio. As entradas representam fatos válidos de domínio, sem tipos técnicos do eComex.
+
+### Catálogo individual
+
+| Cenário   | Descrição configurada                                                  | Impacto caracterizado | Reason code                    |
+| --------- | ---------------------------------------------------------------------- | --------------------- | ------------------------------ |
+| `SCN-067` | `Problema no Mercante`                                                 | `NON_BLOCKING`        | `IMPACT_FROM_EXPLICIT_CATALOG` |
+| `SCN-068` | `Falta Packing List`                                                   | `NON_BLOCKING`        | `IMPACT_FROM_EXPLICIT_CATALOG` |
+| `SCN-069` | `Documentos originais não recebidos do Agente de Carga`                | `NON_BLOCKING`        | `IMPACT_FROM_EXPLICIT_CATALOG` |
+| `SCN-070` | `Avarias antes do registro da DI`                                      | `NON_BLOCKING`        | `IMPACT_FROM_EXPLICIT_CATALOG` |
+| `SCN-071` | `Falta certificado de origem`                                          | `NON_BLOCKING`        | `IMPACT_FROM_EXPLICIT_CATALOG` |
+| `SCN-072` | `Fatura com Assinatura com cor diferente de azul (INV)`                | `NON_BLOCKING`        | `IMPACT_FROM_EXPLICIT_CATALOG` |
+| `SCN-073` | `Divergência de peso entre fatura e Packing List`                      | `BLOCKING`            | `IMPACT_FROM_EXPLICIT_CATALOG` |
+| `SCN-074` | `Preço divergente`                                                     | `BLOCKING`            | `IMPACT_FROM_EXPLICIT_CATALOG` |
+| `SCN-075` | `Correção do B/L / AWB`                                                | `BLOCKING`            | `IMPACT_FROM_EXPLICIT_CATALOG` |
+| `SCN-076` | `Falta recebimento de fatura com assinatura`, sem contexto reconhecido | `BLOCKING`            | `IMPACT_FROM_EXPLICIT_CATALOG` |
+| `SCN-077` | `Divergência de peso bruto entre HAWB/HBL e Invoice`                   | `BLOCKING`            | `IMPACT_FROM_EXPLICIT_CATALOG` |
+| `SCN-078` | `Divergência entre HAWB/BL e Faturas`                                  | `BLOCKING`            | `IMPACT_FROM_EXPLICIT_CATALOG` |
+| `SCN-079` | `Falta lançar linhas no eComex`                                        | `BLOCKING`            | `IMPACT_FROM_EXPLICIT_CATALOG` |
+| `SCN-080` | `Divergência na condição de pagamento entre fatura e pedido`           | `BLOCKING`            | `IMPACT_FROM_EXPLICIT_CATALOG` |
+
+`SCN-081` caracteriza que prefixo inicial `Desvio:`, caixa, mapa de acentos, pontuação, espaços externos ou repetidos e NBSP não impedem a igualdade após a normalização legada. Um `Desvio:` no meio do texto não é removido. Controles ASCII são removidos conforme `CLEAN`; não há fuzzy matching.
+
+`SCN-082` caracteriza descrição útil não encontrada no catálogo como `BLOCKING`, com `UNKNOWN_DESCRIPTION_DEFAULTED_TO_BLOCKING` e evidência explícita de fallback. `SCN-083` caracteriza `undefined`, string vazia, espaços, somente `Desvio:` ou somente pontuação como impacto não classificado, com `MISSING_DEVIATION_DESCRIPTION` e issue. Ausência não passa pelo fallback impeditivo.
+
+### Fatura com assinatura
+
+| Cenário   | Observação normalizada relevante                               | Impacto caracterizado        | Reason code                             |
+| --------- | -------------------------------------------------------------- | ---------------------------- | --------------------------------------- |
+| `SCN-084` | `nao veio ... pre alerta`                                      | `BLOCKING`                   | `SIGNED_INVOICE_MISSING_FROM_PRE_ALERT` |
+| `SCN-085` | `nao recebida ... pre alerta`                                  | `BLOCKING`                   | `SIGNED_INVOICE_MISSING_FROM_PRE_ALERT` |
+| `SCN-086` | `nao enviada ... pre alerta`                                   | `BLOCKING`                   | `SIGNED_INVOICE_MISSING_FROM_PRE_ALERT` |
+| `SCN-087` | `fatura com assinatura`                                        | `NON_BLOCKING`               | `SIGNED_INVOICE_NON_BLOCKING_CONTEXT`   |
+| `SCN-088` | `fatura assinada`                                              | `NON_BLOCKING`               | `SIGNED_INVOICE_NON_BLOCKING_CONTEXT`   |
+| `SCN-089` | `enviar ... assinada`                                          | `NON_BLOCKING`               | `SIGNED_INVOICE_NON_BLOCKING_CONTEXT`   |
+| `SCN-090` | Nenhum padrão contextual reconhecido.                          | `BLOCKING` pelo catálogo     | `IMPACT_FROM_EXPLICIT_CATALOG`          |
+| `SCN-091` | Um padrão de pré-alerta e um padrão não impeditivo coexistem.  | `BLOCKING`                   | `SIGNED_INVOICE_MISSING_FROM_PRE_ALERT` |
+| `SCN-092` | Fragmentos incompletos ou em ordem diferente.                  | `BLOCKING` pelo catálogo     | `IMPACT_FROM_EXPLICIT_CATALOG`          |
+| `SCN-093` | Contexto de pré-alerta aparece com outra descrição catalogada. | Impacto próprio da descrição | `IMPACT_FROM_EXPLICIT_CATALOG`          |
+
+`SCN-091` preserva a precedência legada: pré-alerta é avaliado antes do contexto não impeditivo. Os padrões contextuais só são consultados para `Falta recebimento de fatura com assinatura`.
+
+### Lifecycle individual
+
+| Cenário   | Fato de domínio | Lifecycle | Reason code                |
+| --------- | --------------- | --------- | -------------------------- |
+| `SCN-094` | `hasEnd: false` | `OPEN`    | `MISSING_END_MEANS_OPEN`   |
+| `SCN-095` | `hasEnd: true`  | `CLOSED`  | `END_PRESENT_MEANS_CLOSED` |
+
+`hasEnd` representa somente ausência ou presença já validada. `FIM` inválido não é convertido nesta família. Estar `OPEN` ou `CLOSED` não altera o impacto individual e não produz contagem ou alerta nesta etapa.
+
+A aba `Config` confirma `Fatura com Assinatura com cor diferente de azul (INV)` como entrada explícita `NON_BLOCKING`. A versão sem `(INV)` não está catalogada e recebe `BLOCKING` pelo fallback de descrição desconhecida. Esse cenário protege contra generalização automática entre as variantes.
+
 ## Matriz mínima de cobertura
 
-| Comportamento solicitado                      | Cenário                                      |
-| --------------------------------------------- | -------------------------------------------- |
-| Marítimo aguardando Mercante                  | `SCN-001`                                    |
-| Marítimo com Mercante pronto para conferência | `SCN-002`                                    |
-| Aéreo aguardando CCT                          | `SCN-003`                                    |
-| Desvio impeditivo                             | `SCN-004`                                    |
-| Apenas desvio não impeditivo                  | `SCN-005`                                    |
-| Pendência sem desvio aberto                   | `SCN-006`                                    |
-| Evento não identificado                       | `SCN-007`                                    |
-| ETA vencido sem chegada                       | `SCN-008`                                    |
-| Processo conferido aguardando registro        | `SCN-009`                                    |
-| BL original digitalizado pendente             | `SCN-010`                                    |
-| BL original físico pendente                   | `SCN-011`                                    |
-| Exceção FEDEX a validar                       | `SCN-012`                                    |
-| Processo com ETA e sem registro               | `SCN-015`                                    |
-| Processo com chegada que continua acompanhado | `SCN-016`                                    |
-| Processo registrado                           | `SCN-017`, `SCN-024`                         |
-| Processo sem gatilho de acompanhamento        | `SCN-018`, `SCN-023`                         |
-| Exceção de transbordo                         | `SCN-019`                                    |
-| Exceção marítima de atracação                 | `SCN-020`, `SCN-021`                         |
-| Processo sem identificador                    | `SCN-022`                                    |
-| Normalização textual de evento                | `SCN-025`                                    |
-| Evento não identificado e estados de entrada  | `SCN-026`                                    |
-| Eventos múltiplos em ordens opostas           | `SCN-027`, `SCN-028`                         |
-| Repetição sob semântica de `SEARCH`           | `SCN-029`                                    |
-| Sobreposição das variantes de digitação       | `SCN-030`                                    |
-| Sobreposição das variantes de conferência     | `SCN-031`                                    |
-| Controles e espaço não separável              | `SCN-032`                                    |
-| Observação realista separada por `//`         | `SCN-033`                                    |
-| Mapeamento direto de evento para etapa        | `SCN-034` a `SCN-039`, `SCN-044` a `SCN-047` |
-| Digitação concluída por modal e Mercante      | `SCN-040` a `SCN-043`                        |
-| Independência dos fatos adicionais            | `SCN-048`                                    |
-| ETA ausente com e sem chegada                 | `SCN-049`, `SCN-050`                         |
-| Chegada com ETA presente                      | `SCN-051`, `SCN-052`, `SCN-066`              |
-| Limites numéricos da criticidade              | `SCN-053` a `SCN-059`                        |
-| ETA vencida sem chegada                       | `SCN-060`, `SCN-061`                         |
-| Calendário gregoriano e data civil            | `SCN-062` a `SCN-065`                        |
+| Comportamento solicitado                       | Cenário                                      |
+| ---------------------------------------------- | -------------------------------------------- |
+| Marítimo aguardando Mercante                   | `SCN-001`                                    |
+| Marítimo com Mercante pronto para conferência  | `SCN-002`                                    |
+| Aéreo aguardando CCT                           | `SCN-003`                                    |
+| Desvio impeditivo                              | `SCN-004`                                    |
+| Apenas desvio não impeditivo                   | `SCN-005`                                    |
+| Pendência sem desvio aberto                    | `SCN-006`                                    |
+| Evento não identificado                        | `SCN-007`                                    |
+| ETA vencido sem chegada                        | `SCN-008`                                    |
+| Processo conferido aguardando registro         | `SCN-009`                                    |
+| BL original digitalizado pendente              | `SCN-010`                                    |
+| BL original físico pendente                    | `SCN-011`                                    |
+| Exceção FEDEX a validar                        | `SCN-012`                                    |
+| Processo com ETA e sem registro                | `SCN-015`                                    |
+| Processo com chegada que continua acompanhado  | `SCN-016`                                    |
+| Processo registrado                            | `SCN-017`, `SCN-024`                         |
+| Processo sem gatilho de acompanhamento         | `SCN-018`, `SCN-023`                         |
+| Exceção de transbordo                          | `SCN-019`                                    |
+| Exceção marítima de atracação                  | `SCN-020`, `SCN-021`                         |
+| Processo sem identificador                     | `SCN-022`                                    |
+| Normalização textual de evento                 | `SCN-025`                                    |
+| Evento não identificado e estados de entrada   | `SCN-026`                                    |
+| Eventos múltiplos em ordens opostas            | `SCN-027`, `SCN-028`                         |
+| Repetição sob semântica de `SEARCH`            | `SCN-029`                                    |
+| Sobreposição das variantes de digitação        | `SCN-030`                                    |
+| Sobreposição das variantes de conferência      | `SCN-031`                                    |
+| Controles e espaço não separável               | `SCN-032`                                    |
+| Observação realista separada por `//`          | `SCN-033`                                    |
+| Mapeamento direto de evento para etapa         | `SCN-034` a `SCN-039`, `SCN-044` a `SCN-047` |
+| Digitação concluída por modal e Mercante       | `SCN-040` a `SCN-043`                        |
+| Independência dos fatos adicionais             | `SCN-048`                                    |
+| ETA ausente com e sem chegada                  | `SCN-049`, `SCN-050`                         |
+| Chegada com ETA presente                       | `SCN-051`, `SCN-052`, `SCN-066`              |
+| Limites numéricos da criticidade               | `SCN-053` a `SCN-059`                        |
+| ETA vencida sem chegada                        | `SCN-060`, `SCN-061`                         |
+| Calendário gregoriano e data civil             | `SCN-062` a `SCN-065`                        |
+| Catálogo de impacto individual                 | `SCN-067` a `SCN-080`                        |
+| Normalização, fallback e ausência de descrição | `SCN-081` a `SCN-083`                        |
+| Contextos da fatura com assinatura             | `SCN-084` a `SCN-093`                        |
+| Lifecycle `OPEN` e `CLOSED`                    | `SCN-094`, `SCN-095`                         |
