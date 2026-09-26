@@ -94,32 +94,45 @@ A busca é literal sobre o texto normalizado, sem fuzzy matching, sinônimos, li
 
 ## Etapas operacionais
 
-Etapas relatadas:
+**Fonte da caracterização**: matriz da camada `Processamento` descrita pelo Mestre na Etapa 8 em 2026-09-26 e reproduzida em `packages/domain/src/operational-stages/determine-operational-stage.spec.ts`.
 
-- `Análise Crítica`;
-- `Pendência`;
-- `Aguardando Digitação`;
-- `Digitação`;
-- `Erro na Digitação`;
-- `Digitação OK`;
-- `Aguardando Mercante`;
-- `Aguardando CCT`;
-- `Pronto para Conferência`;
-- `Em Conferência`;
-- `Aguardando Registro`;
-- `Revisar observação`.
+Evento e etapa são conceitos diferentes. A política recebe um `OperationalEvent` já reconhecido e não relê a observação. Os códigos estáveis da etapa e seus equivalentes conceituais no legado são:
 
-Mapeamentos explicitamente fornecidos:
+| Código de etapa         | Equivalente conceitual no legado |
+| ----------------------- | -------------------------------- |
+| `CRITICAL_ANALYSIS`     | Análise Crítica                  |
+| `PENDING`               | Pendência                        |
+| `AWAITING_TYPING`       | Aguardando Digitação             |
+| `TYPING`                | Digitação                        |
+| `TYPING_ERROR`          | Erro na Digitação                |
+| `TYPING_COMPLETED`      | Digitação OK                     |
+| `AWAITING_MERCANTE`     | Aguardando Mercante              |
+| `AWAITING_CCT`          | Aguardando CCT                   |
+| `READY_FOR_REVIEW`      | Pronto para Conferência          |
+| `IN_REVIEW`             | Em Conferência                   |
+| `AWAITING_REGISTRATION` | Aguardando Registro              |
+| `REVIEW_OBSERVATION`    | Revisar observação               |
 
-| ID             | Condição relatada                                           | Etapa resultante           | Estado e lacunas                                                                  |
-| -------------- | ----------------------------------------------------------- | -------------------------- | --------------------------------------------------------------------------------- |
-| RULE-STAGE-001 | Evento `Digitação OK`, modal marítimo e Mercante ausente.   | `Aguardando Mercante`.     | Relatado.                                                                         |
-| RULE-STAGE-002 | Evento `Digitação OK`, modal marítimo e Mercante existente. | `Pronto para Conferência`. | Relatado, mas requer validação com a distinção entre Mercante aberto e conferido. |
-| RULE-STAGE-003 | Evento `Digitação OK` e modal aéreo.                        | `Aguardando CCT`.          | Relatado. A condição que encerra essa espera ainda não foi fornecida.             |
-| RULE-STAGE-004 | Evento `Processo conferido`.                                | `Aguardando Registro`.     | Relatado.                                                                         |
-| RULE-STAGE-005 | Nenhum evento conhecido.                                    | `Revisar observação`.      | Relatado.                                                                         |
+Essas equivalências documentam o comportamento, mas não definem textos de interface.
 
-O mapeamento dos demais eventos para etapas e a precedência completa entre condições normais e excepcionais permanecem abertos.
+| ID             | Condição caracterizada                                             | Etapa resultante        | Estado e limites                                                                                                 |
+| -------------- | ------------------------------------------------------------------ | ----------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| RULE-STAGE-001 | `TYPING_COMPLETED`, modal marítimo e referência Mercante ausente.  | `AWAITING_MERCANTE`     | Caracterizado, não aprovado.                                                                                     |
+| RULE-STAGE-002 | `TYPING_COMPLETED`, modal marítimo e referência Mercante presente. | `READY_FOR_REVIEW`      | Caracterizado, não aprovado. Presença não significa Mercante aberto ou conferido.                                |
+| RULE-STAGE-003 | `TYPING_COMPLETED` e modal aéreo.                                  | `AWAITING_CCT`          | Caracterizado, não aprovado. A presença da referência Mercante não participa dessa decisão.                      |
+| RULE-STAGE-004 | `PROCESS_REVIEWED`.                                                | `AWAITING_REGISTRATION` | Caracterizado, não aprovado.                                                                                     |
+| RULE-STAGE-005 | `UNIDENTIFIED`.                                                    | `REVIEW_OBSERVATION`    | Caracterizado, não aprovado. É um estado explícito, não uma exceção técnica.                                     |
+| RULE-STAGE-006 | `CRITICAL_ANALYSIS_STARTED`.                                       | `CRITICAL_ANALYSIS`     | Caracterizado, não aprovado.                                                                                     |
+| RULE-STAGE-007 | `PENDING_ISSUE_REPORTED`.                                          | `PENDING`               | Caracterizado, não aprovado. Desvios não participam desta família de regras.                                     |
+| RULE-STAGE-008 | `PENDING_ISSUES_RETURNED`.                                         | `AWAITING_TYPING`       | Caracterizado, não aprovado.                                                                                     |
+| RULE-STAGE-009 | `PROCESS_SENT_TO_TYPING` ou `SENT_TO_TYPING`.                      | `TYPING`                | Caracterizado, não aprovado. Os eventos permanecem distintos apesar da mesma etapa.                              |
+| RULE-STAGE-010 | `DUIMP_GENERATION_ERROR`.                                          | `TYPING_ERROR`          | Caracterizado, não aprovado.                                                                                     |
+| RULE-STAGE-011 | `PROCESS_SENT_TO_REVIEW` ou `SENT_TO_REVIEW`.                      | `IN_REVIEW`             | Caracterizado, não aprovado. Os eventos permanecem distintos apesar da mesma etapa.                              |
+| RULE-STAGE-012 | `TYPING_COMPLETED` e modal de domínio `other` ou `unknown`.        | `TYPING_COMPLETED`      | Caracterizado, não aprovado. Evento e etapa permanecem tipos distintos mesmo quando têm significado equivalente. |
+
+Somente `TYPING_COMPLETED` consulta modal e presença da referência Mercante. Os demais mapeamentos dependem apenas do evento. A política não determina status detalhado do Mercante, CCT, prontidão adicional, alerta, criticidade ou desvio.
+
+A precedência completa entre essa etapa derivada e futuras condições excepcionais permanece aberta.
 
 ## Criticidade
 
@@ -226,7 +239,7 @@ Situações relatadas:
 | RULE-MERC-003 | `Nº CE MERCANTE` existe.                                 | Mercante existente, mas não necessariamente conferido.             | Relatado.                                                           |
 | RULE-MERC-004 | Existe pendência no Mercante.                            | Não deve ser tratada automaticamente como desvio impeditivo comum. | Relatado. A interação exata com bloqueios permanece aberta.         |
 
-Existe uma lacuna entre `RULE-STAGE-002`, que usa Mercante existente para indicar prontidão, e a distinção entre Mercante existente e conferido. Essa lacuna deve ser resolvida por evidência da planilha.
+`RULE-STAGE-002` caracteriza que a presença da referência Mercante produz a etapa legada `READY_FOR_REVIEW`. Isso não afirma que o Mercante esteja aberto ou conferido, nem resolve quais condições a regra futura de prontidão deverá exigir.
 
 ## BL original digitalizado
 

@@ -6,7 +6,7 @@ A planilha é uma especificação executável temporária. O comportamento relat
 
 ## Estado desta documentação
 
-Esta documentação começou na Etapa 2. A Etapa 6 caracterizou a elegibilidade para acompanhamento operacional principal. A Etapa 7 caracterizou exclusivamente o reconhecimento do evento operacional, sem determinar etapa.
+Esta documentação começou na Etapa 2. A Etapa 6 caracterizou a elegibilidade para acompanhamento operacional principal. A Etapa 7 caracterizou exclusivamente o reconhecimento do evento operacional. A Etapa 8 caracterizou a determinação da etapa operacional a partir do evento e dos fatos adicionais estritamente necessários para `TYPING_COMPLETED`.
 
 Os conteúdos usam os seguintes estados de maturidade:
 
@@ -26,9 +26,9 @@ Um comportamento pode ser caracterizado e ainda não ser aprovado como regra fut
 
 ## Proveniência desta versão
 
-Os itens marcados como `Relatado` têm como fonte o briefing operacional fornecido pelo Mestre para a Etapa 2 em 2026-09-26. A família `RULE-TRACK` marcada como `Caracterizado` usa a expressão da fórmula e os padrões textuais descritos pelo Mestre na Etapa 6 na mesma data. A família `RULE-EVENT` usa o catálogo, a normalização e a seleção por posição observados diretamente na fórmula e descritos pelo Mestre na Etapa 7. Ambos são reproduzidos por testes automatizados do domínio.
+Os itens marcados como `Relatado` têm como fonte o briefing operacional fornecido pelo Mestre para a Etapa 2 em 2026-09-26. A família `RULE-TRACK` marcada como `Caracterizado` usa a expressão da fórmula e os padrões textuais descritos pelo Mestre na Etapa 6 na mesma data. A família `RULE-EVENT` usa o catálogo, a normalização e a seleção por posição observados diretamente na fórmula e descritos pelo Mestre na Etapa 7. A família `RULE-STAGE` reproduz a matriz da camada Processamento descrita pelo Mestre na Etapa 8. As três famílias são reproduzidas por testes automatizados do domínio.
 
-Nenhum arquivo da planilha foi incorporado ao repositório. As caracterizações das Etapas 6 e 7 limitam-se ao comportamento das fórmulas explicitamente descrito e aos casos reproduzidos nos testes. Nenhuma regra operacional foi marcada como `Aprovado`.
+Nenhum arquivo da planilha foi incorporado ao repositório. As caracterizações das Etapas 6, 7 e 8 limitam-se ao comportamento das fórmulas explicitamente descrito e aos casos reproduzidos nos testes. Nenhuma regra operacional foi marcada como `Aprovado`.
 
 ## Mapa dos documentos
 

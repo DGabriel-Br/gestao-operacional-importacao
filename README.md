@@ -4,13 +4,14 @@ Aplicação web para gestão operacional de processos de importação. O projeto
 
 ## Estado atual
 
-O repositório contém a fundação técnica, as duas primeiras fronteiras de ingestão e as duas primeiras famílias de regras do domínio:
+O repositório contém a fundação técnica, as duas primeiras fronteiras de ingestão e as três primeiras famílias de regras do domínio:
 
 - monorepo com pnpm workspaces;
 - aplicação NestJS mínima, sem endpoints de negócio;
 - aplicação Next.js mínima, sem telas de negócio;
 - pacote de domínio puro com a elegibilidade para acompanhamento operacional principal;
-- reconhecimento do evento operacional pelo algoritmo textual legado, sem determinação de etapa;
+- reconhecimento do evento operacional pelo algoritmo textual legado;
+- determinação da etapa operacional a partir do evento reconhecido e, para `TYPING_COMPLETED`, do modal e da presença da referência Mercante;
 - documentação de arquitetura e descoberta do domínio;
 - contrato lógico e normalização técnica de linhas do eTrack;
 - contrato lógico e normalização técnica de linhas do eComex;
@@ -18,7 +19,7 @@ O repositório contém a fundação técnica, as duas primeiras fronteiras de in
 - reconhecimento legado das evidências de transbordo e atracação, separado da decisão de elegibilidade;
 - typecheck e testes automatizados.
 
-Os formatos físicos das exportações eTrack e eComex ainda não foram definidos. A ingestão não lê CSV, XLSX ou sistemas externos, não correlaciona as fontes, não persiste dados e não executa regras operacionais. A regra do domínio ainda não está conectada a casos de uso. Banco de dados, autenticação e demais integrações ainda não foram implementados.
+Os formatos físicos das exportações eTrack e eComex ainda não foram definidos. A ingestão não lê CSV, XLSX ou sistemas externos, não correlaciona as fontes, não persiste dados e não executa regras operacionais. As regras do domínio ainda não estão conectadas a casos de uso. Banco de dados, autenticação e demais integrações ainda não foram implementados.
 
 ## Estrutura
 

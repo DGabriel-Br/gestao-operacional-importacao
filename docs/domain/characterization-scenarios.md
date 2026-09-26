@@ -1,6 +1,6 @@
 # Cenários de caracterização
 
-Estes cenários são exemplos documentais anonimizados para confrontar o comportamento relatado com a planilha atual. A partir da Etapa 6, os cenários de acompanhamento operacional identificados abaixo também possuem testes executáveis no pacote de domínio.
+Estes cenários são exemplos documentais anonimizados para confrontar o comportamento relatado com a planilha atual. As famílias caracterizadas nas Etapas 6, 7 e 8 possuem testes executáveis no pacote de domínio.
 
 Os resultados chamados de `Relatado` derivam do briefing operacional da Etapa 2 em 2026-09-26. Eles ainda precisam de evidência reproduzível da planilha e aprovação humana antes de orientar testes de domínio.
 
@@ -12,7 +12,19 @@ Os resultados chamados de `Relatado` derivam do briefing operacional da Etapa 2 
 - `Resultado relatado` registra somente o comportamento fornecido nesta etapa.
 - `Evidência necessária` indica o que deve ser obtido da planilha antes de aprovar a regra futura.
 
-Salvo quando indicado como `Caracterizado na Etapa 6`, os cenários continuam como rascunhos documentais e ainda não constituem evidência reproduzível da planilha.
+Salvo quando indicados como `Caracterizado`, os cenários continuam como rascunhos documentais e ainda não constituem evidência reproduzível da planilha.
+
+Os cenários amplos da Etapa 2 permanecem como registro do relato original. Para a dimensão de etapa, as caracterizações da Etapa 8 substituem somente as seguintes parcelas:
+
+| Cenário amplo | Caracterização canônica da etapa |
+| ------------- | -------------------------------- |
+| `SCN-001`     | `SCN-040`                        |
+| `SCN-002`     | `SCN-041`                        |
+| `SCN-003`     | `SCN-042`                        |
+| `SCN-007`     | `SCN-047`                        |
+| `SCN-009`     | `SCN-046`                        |
+
+Alertas, integrações e demais afirmações desses cenários amplos continuam apenas relatados quando não possuem caracterização própria.
 
 ## SCN-001: Marítimo aguardando Mercante
 
@@ -404,34 +416,64 @@ Os códigos `PROCESS_SENT_TO_TYPING` e `PROCESS_SENT_TO_REVIEW` continuam distin
 
 Não há determinação de etapa nos cenários `SCN-025` a `SCN-033`.
 
+## Determinação de etapa operacional caracterizada na Etapa 8
+
+A fonte da caracterização é a matriz da camada `Processamento` descrita pelo Mestre na Etapa 8 em 2026-09-26. Os fatos abaixo já são conceitos de domínio: não representam diretamente os literais de modal do eTrack ou eComex. Os resultados são reproduzidos em `packages/domain/src/operational-stages/determine-operational-stage.spec.ts` e ainda aguardam aprovação de negócio.
+
+| Cenário   | Evento e fatos adicionais                                          | Etapa caracterizada     | Reason code                                  |
+| --------- | ------------------------------------------------------------------ | ----------------------- | -------------------------------------------- |
+| `SCN-034` | `CRITICAL_ANALYSIS_STARTED`.                                       | `CRITICAL_ANALYSIS`     | `STAGE_MAPPED_FROM_EVENT`                    |
+| `SCN-035` | `PENDING_ISSUE_REPORTED`.                                          | `PENDING`               | `STAGE_MAPPED_FROM_EVENT`                    |
+| `SCN-036` | `PENDING_ISSUES_RETURNED`.                                         | `AWAITING_TYPING`       | `STAGE_MAPPED_FROM_EVENT`                    |
+| `SCN-037` | `PROCESS_SENT_TO_TYPING`.                                          | `TYPING`                | `STAGE_MAPPED_FROM_EVENT`                    |
+| `SCN-038` | `SENT_TO_TYPING`.                                                  | `TYPING`                | `STAGE_MAPPED_FROM_EVENT`                    |
+| `SCN-039` | `DUIMP_GENERATION_ERROR`.                                          | `TYPING_ERROR`          | `STAGE_MAPPED_FROM_EVENT`                    |
+| `SCN-040` | `TYPING_COMPLETED`, modal marítimo e referência Mercante ausente.  | `AWAITING_MERCANTE`     | `TYPING_COMPLETED_MARITIME_WITHOUT_MERCANTE` |
+| `SCN-041` | `TYPING_COMPLETED`, modal marítimo e referência Mercante presente. | `READY_FOR_REVIEW`      | `TYPING_COMPLETED_MARITIME_WITH_MERCANTE`    |
+| `SCN-042` | `TYPING_COMPLETED` e modal aéreo, com ou sem referência Mercante.  | `AWAITING_CCT`          | `TYPING_COMPLETED_AIR`                       |
+| `SCN-043` | `TYPING_COMPLETED` e modal `other` ou `unknown`.                   | `TYPING_COMPLETED`      | `TYPING_COMPLETED_OTHER_MODE`                |
+| `SCN-044` | `PROCESS_SENT_TO_REVIEW`.                                          | `IN_REVIEW`             | `STAGE_MAPPED_FROM_EVENT`                    |
+| `SCN-045` | `SENT_TO_REVIEW`.                                                  | `IN_REVIEW`             | `STAGE_MAPPED_FROM_EVENT`                    |
+| `SCN-046` | `PROCESS_REVIEWED`.                                                | `AWAITING_REGISTRATION` | `STAGE_MAPPED_FROM_EVENT`                    |
+| `SCN-047` | `UNIDENTIFIED`.                                                    | `REVIEW_OBSERVATION`    | `UNIDENTIFIED_EVENT_REQUIRES_REVIEW`         |
+
+### Independência dos fatos adicionais
+
+`SCN-048` caracteriza que modal e referência Mercante não alteram a etapa de eventos diferentes de `TYPING_COMPLETED`. O contrato exige esses fatos somente no ramo especial, e os testes também exercitam entradas estruturais com contexto adicional para comprovar que ele é descartado da decisão.
+
+Os cenários da Etapa 8 não reconhecem texto, não classificam desvios, não determinam alertas e não avaliam se o Mercante está aberto ou conferido. Em `SCN-041`, apenas a presença já interpretada da referência Mercante participa da reprodução do legado.
+
 ## Matriz mínima de cobertura
 
-| Comportamento solicitado                      | Cenário              |
-| --------------------------------------------- | -------------------- |
-| Marítimo aguardando Mercante                  | `SCN-001`            |
-| Marítimo com Mercante pronto para conferência | `SCN-002`            |
-| Aéreo aguardando CCT                          | `SCN-003`            |
-| Desvio impeditivo                             | `SCN-004`            |
-| Apenas desvio não impeditivo                  | `SCN-005`            |
-| Pendência sem desvio aberto                   | `SCN-006`            |
-| Evento não identificado                       | `SCN-007`            |
-| ETA vencido sem chegada                       | `SCN-008`            |
-| Processo conferido aguardando registro        | `SCN-009`            |
-| BL original digitalizado pendente             | `SCN-010`            |
-| BL original físico pendente                   | `SCN-011`            |
-| Exceção FEDEX a validar                       | `SCN-012`            |
-| Processo com ETA e sem registro               | `SCN-015`            |
-| Processo com chegada que continua acompanhado | `SCN-016`            |
-| Processo registrado                           | `SCN-017`, `SCN-024` |
-| Processo sem gatilho de acompanhamento        | `SCN-018`, `SCN-023` |
-| Exceção de transbordo                         | `SCN-019`            |
-| Exceção marítima de atracação                 | `SCN-020`, `SCN-021` |
-| Processo sem identificador                    | `SCN-022`            |
-| Normalização textual de evento                | `SCN-025`            |
-| Evento não identificado e estados de entrada  | `SCN-026`            |
-| Eventos múltiplos em ordens opostas           | `SCN-027`, `SCN-028` |
-| Repetição sob semântica de `SEARCH`           | `SCN-029`            |
-| Sobreposição das variantes de digitação       | `SCN-030`            |
-| Sobreposição das variantes de conferência     | `SCN-031`            |
-| Controles e espaço não separável              | `SCN-032`            |
-| Observação realista separada por `//`         | `SCN-033`            |
+| Comportamento solicitado                      | Cenário                                      |
+| --------------------------------------------- | -------------------------------------------- |
+| Marítimo aguardando Mercante                  | `SCN-001`                                    |
+| Marítimo com Mercante pronto para conferência | `SCN-002`                                    |
+| Aéreo aguardando CCT                          | `SCN-003`                                    |
+| Desvio impeditivo                             | `SCN-004`                                    |
+| Apenas desvio não impeditivo                  | `SCN-005`                                    |
+| Pendência sem desvio aberto                   | `SCN-006`                                    |
+| Evento não identificado                       | `SCN-007`                                    |
+| ETA vencido sem chegada                       | `SCN-008`                                    |
+| Processo conferido aguardando registro        | `SCN-009`                                    |
+| BL original digitalizado pendente             | `SCN-010`                                    |
+| BL original físico pendente                   | `SCN-011`                                    |
+| Exceção FEDEX a validar                       | `SCN-012`                                    |
+| Processo com ETA e sem registro               | `SCN-015`                                    |
+| Processo com chegada que continua acompanhado | `SCN-016`                                    |
+| Processo registrado                           | `SCN-017`, `SCN-024`                         |
+| Processo sem gatilho de acompanhamento        | `SCN-018`, `SCN-023`                         |
+| Exceção de transbordo                         | `SCN-019`                                    |
+| Exceção marítima de atracação                 | `SCN-020`, `SCN-021`                         |
+| Processo sem identificador                    | `SCN-022`                                    |
+| Normalização textual de evento                | `SCN-025`                                    |
+| Evento não identificado e estados de entrada  | `SCN-026`                                    |
+| Eventos múltiplos em ordens opostas           | `SCN-027`, `SCN-028`                         |
+| Repetição sob semântica de `SEARCH`           | `SCN-029`                                    |
+| Sobreposição das variantes de digitação       | `SCN-030`                                    |
+| Sobreposição das variantes de conferência     | `SCN-031`                                    |
+| Controles e espaço não separável              | `SCN-032`                                    |
+| Observação realista separada por `//`         | `SCN-033`                                    |
+| Mapeamento direto de evento para etapa        | `SCN-034` a `SCN-039`, `SCN-044` a `SCN-047` |
+| Digitação concluída por modal e Mercante      | `SCN-040` a `SCN-043`                        |
+| Independência dos fatos adicionais            | `SCN-048`                                    |

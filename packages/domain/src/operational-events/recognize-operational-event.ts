@@ -1,3 +1,12 @@
+import type { OperationalEvent } from './operational-event.js'
+
+export type { OperationalEvent } from './operational-event.js'
+
+interface LegacyOperationalEventCatalogEntry {
+  readonly event: OperationalEvent
+  readonly configuredText: string
+}
+
 export const LEGACY_OPERATIONAL_EVENT_CATALOG = [
   {
     event: 'CRITICAL_ANALYSIS_STARTED',
@@ -39,10 +48,7 @@ export const LEGACY_OPERATIONAL_EVENT_CATALOG = [
     event: 'PROCESS_REVIEWED',
     configuredText: 'Processo conferido',
   },
-] as const
-
-export type OperationalEvent =
-  (typeof LEGACY_OPERATIONAL_EVENT_CATALOG)[number]['event']
+] as const satisfies readonly LegacyOperationalEventCatalogEntry[]
 
 export type OperationalEventRecognitionReasonCode =
   | 'OPERATIONAL_EVENT_RECOGNIZED'
