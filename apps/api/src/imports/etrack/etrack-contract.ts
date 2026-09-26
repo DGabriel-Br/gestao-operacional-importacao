@@ -1,3 +1,5 @@
+import type { TechnicalDateValue } from '../shared/technical-date'
+
 export const ETRACK_SOURCE = 'etrack' as const
 
 export const ETRACK_HEADERS = [
@@ -20,11 +22,7 @@ export const ETRACK_REQUIRED_HEADERS = ['Numero do Processo'] as const
 
 export type ETrackHeader = (typeof ETRACK_HEADERS)[number]
 
-export type ETrackDateValue =
-  | { readonly kind: 'absent' }
-  | { readonly kind: 'date'; readonly value: string }
-  | { readonly kind: 'date-time'; readonly value: string }
-  | { readonly kind: 'invalid'; readonly value: unknown }
+export type ETrackDateValue = TechnicalDateValue
 
 export type ETrackTransportModeValue =
   | { readonly kind: 'absent' }

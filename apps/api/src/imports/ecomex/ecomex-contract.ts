@@ -1,3 +1,5 @@
+import type { TechnicalDateValue } from '../shared/technical-date'
+
 export const ECOMEX_SOURCE = 'ecomex' as const
 
 export const ECOMEX_HEADERS = [
@@ -18,11 +20,7 @@ export const ECOMEX_REQUIRED_HEADERS = ['EMBARQUE', 'DESCR_DESVIO'] as const
 
 export type EComexHeader = (typeof ECOMEX_HEADERS)[number]
 
-export type EComexDateValue =
-  | { readonly kind: 'absent' }
-  | { readonly kind: 'date'; readonly value: string }
-  | { readonly kind: 'date-time'; readonly value: string }
-  | { readonly kind: 'invalid'; readonly value: unknown }
+export type EComexDateValue = TechnicalDateValue
 
 export type EComexTransportModeValue =
   | { readonly kind: 'absent' }
