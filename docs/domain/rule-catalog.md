@@ -2,7 +2,7 @@
 
 Este catálogo descreve o comportamento atual relatado da ferramenta. Ele não é uma implementação, não define tipos finais e não aprova automaticamente cada comportamento como requisito futuro.
 
-Os comportamentos marcados como `Relatado` foram fornecidos no briefing operacional da Etapa 2 em 2026-09-26. As famílias `RULE-TRACK`, `RULE-EVENT`, `RULE-STAGE`, `RULE-CRIT`, `RULE-DEV` e `RULE-ALERT` possuem caracterizações posteriores baseadas na lógica das fórmulas explicitamente descrita pelo Mestre.
+Os comportamentos marcados como `Relatado` foram fornecidos no briefing operacional da Etapa 2 em 2026-09-26. As famílias `RULE-TRACK`, `RULE-EVENT`, `RULE-STAGE`, `RULE-CRIT`, `RULE-DEV`, `RULE-ALERT` e `RULE-DIGITAL` possuem caracterizações posteriores baseadas na lógica das fórmulas explicitamente descrita pelo Mestre.
 
 ## Como interpretar o catálogo
 
@@ -322,22 +322,44 @@ Situações relatadas:
 
 ## BL original digitalizado
 
-Aplicável principalmente ao modal marítimo.
+**Fonte da caracterização**: catálogo textual, normalização, precedência por posição e matriz de status descritos pelo Mestre na Etapa 12 em 2026-09-27 e reproduzidos em `packages/domain/src/digital-original/`.
 
-| ID               | Evidência relatada                                              | Resultado                                                                  | Estado e lacunas                                                   |
-| ---------------- | --------------------------------------------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| RULE-DIGITAL-001 | `Original digitalizado OK` ou `Originais OK`.                   | Evidência de recebimento.                                                  | Relatado. O escopo exato de `Originais OK` precisa ser confirmado. |
-| RULE-DIGITAL-002 | `Aguardando envio do BL original digitalizado`.                 | Evidência de pendência.                                                    | Relatado.                                                          |
-| RULE-DIGITAL-003 | Evidências de recebimento e pendência entram em conflito.       | Prevalece atualmente a evidência mais recente identificável na observação. | Relatado. A definição de ordem precisa ser caracterizada.          |
-| RULE-DIGITAL-004 | Evidência documental e desvio aberto relacionado não concordam. | Pode resultar em situação inconsistente.                                   | Relatado, sem mapeamento completo entre descrições e situações.    |
+O BL original digitalizado é uma dimensão independente do original físico, do Mercante, da etapa e do alerta principal. A política não recebe registros eComex nem descobre o desvio relacionado. Ela recebe somente o fato já interpretado `hasOpenDigitalOriginalDeviation`, que deve representar presença ou ausência confirmada, sem converter desconhecimento técnico em `false`.
 
-Situações relatadas:
+### Evidências e precedência textual
 
-- `BL original digitalizado recebido`;
-- `Aguardando BL original digitalizado`;
-- `BL original digitalizado pendente sem desvio`;
-- `BL original digitalizado recebido, mas desvio continua aberto`;
-- `Status não identificado`.
+| Evidência estável | Texto caracterizado                                   |
+| ----------------- | ----------------------------------------------------- |
+| `RECEIVED`        | `Original digitalizado OK`                            |
+| `RECEIVED`        | `Originais OK`                                        |
+| `AWAITING`        | `Aguardando envio do BL original digitalizado`        |
+| `UNIDENTIFIED`    | Nenhuma das três evidências foi reconhecida no texto. |
+
+| ID               | Comportamento atual caracterizado                                                                                        | Resultado                                                                          | Estado e lacunas                                                                                  |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| RULE-DIGITAL-001 | `Original digitalizado OK` ou `Originais OK` é reconhecido após a normalização específica da família.                    | Evidência `RECEIVED`.                                                              | Caracterizado, não aprovado. O alcance de `Originais OK` sobre o original físico continua aberto. |
+| RULE-DIGITAL-002 | `Aguardando envio do BL original digitalizado` é reconhecido após a mesma normalização.                                  | Evidência `AWAITING`.                                                              | Caracterizado, não aprovado.                                                                      |
+| RULE-DIGITAL-003 | Para cada uma das três chaves, a última ocorrência é localizada; entre elas, vence a maior posição no texto normalizado. | A evidência textual posterior prevalece, inclusive quando uma evidência se repete. | Caracterizado, não aprovado. Não reutiliza a seleção pelas primeiras ocorrências de eventos.      |
+| RULE-DIGITAL-004 | Modal marítimo, evidência `RECEIVED` e ausência de desvio aberto relacionado.                                            | Status `RECEIVED`.                                                                 | Caracterizado, não aprovado.                                                                      |
+| RULE-DIGITAL-005 | Modal marítimo, evidência `AWAITING` e presença de desvio aberto relacionado.                                            | Status `AWAITING`.                                                                 | Caracterizado, não aprovado.                                                                      |
+| RULE-DIGITAL-006 | Modal marítimo, evidência `AWAITING` e ausência de desvio aberto relacionado.                                            | Status e issue `PENDING_WITHOUT_OPEN_DEVIATION`.                                   | Caracterizado como inconsistência, não aprovado.                                                  |
+| RULE-DIGITAL-007 | Modal marítimo, evidência `RECEIVED` e presença de desvio aberto relacionado.                                            | Status e issue `RECEIVED_WITH_OPEN_DEVIATION`.                                     | Caracterizado como inconsistência, não aprovado.                                                  |
+| RULE-DIGITAL-008 | Modal marítimo sem evidência textual reconhecida, independentemente do fato de desvio recebido.                          | Status `UNIDENTIFIED`.                                                             | Caracterizado, não aprovado. O desvio isolado não cria evidência textual.                         |
+| RULE-DIGITAL-009 | Modal aéreo ou modal de domínio `other`.                                                                                 | Status `NOT_APPLICABLE`, mesmo que a observação contenha uma das evidências.       | Caracterizado, não aprovado.                                                                      |
+| RULE-DIGITAL-010 | Modal de domínio `unknown`.                                                                                              | Status `UNIDENTIFIED`, razão de aplicabilidade indeterminada e issue explícita.    | Caracterizado, não aprovado. O modal não é presumido marítimo.                                    |
+
+### Normalização caracterizada
+
+Na ordem aplicada, a observação e as três chaves:
+
+1. são convertidas para minúsculas;
+2. têm espaço não separável convertido para espaço comum;
+3. têm caracteres de controle ASCII equivalentes a `CLEAN` removidos;
+4. aplicam somente os mapas `á à â ã ä -> a`, `é è ê ë -> e`, `í ì î ï -> i`, `ó ò ô õ ö -> o`, `ú ù û ü -> u` e `ç -> c`;
+5. substituem caracteres fora de `a-z`, `0-9` e espaço por espaço;
+6. colapsam espaços e aplicam `trim`.
+
+A busca é literal, sem fuzzy matching, sinônimos, remoção de artigos ou interpretação de delimitadores. A posição explicativa é 1-based no texto normalizado. Observação ausente, vazia, somente com espaços e preenchida sem evidência possuem razões distintas, mas todas produzem evidência `UNIDENTIFIED`.
 
 ## BL original físico
 
@@ -410,7 +432,7 @@ Estas precedências são locais. Elas não formam uma ordem global de avaliaçã
 
 1. A presença de `Data Registro` retira o processo da fila operacional principal.
 2. Entre eventos reconhecidos nas observações, o algoritmo legado seleciona a maior entre as primeiras posições normalizadas. Isso não comprova o último evento semântico nem determina a etapa.
-3. Em evidências conflitantes de Mercante e BL digitalizado, a evidência mais recente identificável pode prevalecer.
+3. Para BL digitalizado, prevalece a maior entre as últimas posições normalizadas das três evidências caracterizadas. A precedência do Mercante continua aberta.
 4. Na etapa `Pendência`, desvios impeditivos abertos determinam bloqueio antes da análise dos não impeditivos.
 5. Na etapa `Pendência`, ausência total de desvios abertos determina inconsistência.
 6. Depois de `Digitação OK`, regras do modal podem substituir a etapa direta por uma espera específica ou prontidão.

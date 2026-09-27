@@ -73,3 +73,22 @@ export {
   type DeviationLifecycleFacts,
   type DeviationLifecycleReasonCode,
 } from './deviations/determine-deviation-lifecycle.js'
+
+export {
+  recognizeDigitalOriginalEvidence,
+  type DigitalOriginalEvidence,
+  type DigitalOriginalEvidenceKind,
+  type DigitalOriginalEvidenceReasonCode,
+  type RecognizedDigitalOriginalEvidence,
+  type UnidentifiedDigitalOriginalEvidence,
+} from './digital-original/recognize-digital-original-evidence.js'
+
+export {
+  determineDigitalOriginalStatus,
+  type DigitalOriginalDecision,
+  type DigitalOriginalFacts,
+  type DigitalOriginalIssue,
+  type DigitalOriginalReasonCode,
+  type DigitalOriginalStatus,
+  type DigitalOriginalTransportMode,
+} from './digital-original/determine-digital-original-status.js'

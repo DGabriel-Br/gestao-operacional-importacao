@@ -1,6 +1,6 @@
 # Cenários de caracterização
 
-Estes cenários são exemplos documentais anonimizados para confrontar o comportamento relatado com a planilha atual. As famílias caracterizadas nas Etapas 6 a 11 possuem testes executáveis no pacote de domínio.
+Estes cenários são exemplos documentais anonimizados para confrontar o comportamento relatado com a planilha atual. As famílias caracterizadas nas Etapas 6 a 12 possuem testes executáveis no pacote de domínio.
 
 Os resultados chamados de `Relatado` derivam do briefing operacional da Etapa 2 em 2026-09-26. Eles ainda precisam de evidência reproduzível da planilha e aprovação humana antes de orientar testes de domínio.
 
@@ -245,6 +245,12 @@ Alertas, integrações e demais afirmações desses cenários amplos continuam a
 
 - Situação: `Aguardando BL original digitalizado`.
 
+**Caracterização posterior**
+
+- `SCN-131` caracteriza `AWAITING` quando também existe desvio aberto relacionado.
+- `SCN-132` caracteriza `PENDING_WITHOUT_OPEN_DEVIATION` quando a mesma evidência não possui o desvio aberto esperado.
+- Este cenário amplo não informa o fato de desvio e, isoladamente, não determina qual dos dois status se aplica.
+
 **Evidência necessária**
 
 - Confirmar como desvios de documentos originais alteram o texto final da situação.
@@ -337,6 +343,10 @@ Alertas, integrações e demais afirmações desses cenários amplos continuam a
 
 - A evidência mais recente identificável prevalece.
 
+**Caracterização posterior**
+
+- `SCN-138` a `SCN-142` caracterizam a ordem como a maior entre as últimas posições normalizadas das três chaves conhecidas.
+
 **Variações necessárias**
 
 1. `Original digitalizado OK` seguido de `Aguardando envio do BL original digitalizado`.
@@ -344,8 +354,7 @@ Alertas, integrações e demais afirmações desses cenários amplos continuam a
 
 **Evidência necessária**
 
-- Resultados atuais das duas variações.
-- Regra de ordenação textual ou temporal.
+- Aprovação humana de que a precedência caracterizada deve permanecer na regra futura.
 
 ## Acompanhamento operacional caracterizado na Etapa 6
 
@@ -596,6 +605,55 @@ Nos cenários seguintes, ETA é anterior à avaliação e chegada está ausente:
 
 Os cenários da Etapa 11 não classificam nem contam desvios, não determinam criticidade, não detalham Mercante, CCT ou BL e não ordenam o dashboard.
 
+## BL original digitalizado caracterizado na Etapa 12
+
+A fonte da caracterização é o catálogo textual, a normalização, a precedência por posição e a matriz de situações descritos pelo Mestre na Etapa 12 em 2026-09-27. Os resultados são reproduzidos em `packages/domain/src/digital-original/` e ainda aguardam aprovação de negócio.
+
+### Matriz marítima de evidência e desvio relacionado
+
+| Cenário   | Evidência textual reconhecida | Desvio aberto relacionado | Status caracterizado                     | Reason code                                       |
+| --------- | ----------------------------- | ------------------------- | ---------------------------------------- | ------------------------------------------------- |
+| `SCN-129` | `Original digitalizado OK`.   | Não.                      | `RECEIVED`                               | `DIGITAL_ORIGINAL_RECEIVED`                       |
+| `SCN-130` | `Originais OK`.               | Não.                      | `RECEIVED`                               | `DIGITAL_ORIGINAL_RECEIVED`                       |
+| `SCN-131` | `AWAITING`.                   | Sim.                      | `AWAITING`                               | `DIGITAL_ORIGINAL_AWAITING_WITH_OPEN_DEVIATION`   |
+| `SCN-132` | `AWAITING`.                   | Não.                      | `PENDING_WITHOUT_OPEN_DEVIATION` e issue | `DIGITAL_ORIGINAL_PENDING_WITHOUT_OPEN_DEVIATION` |
+| `SCN-133` | `RECEIVED`.                   | Sim.                      | `RECEIVED_WITH_OPEN_DEVIATION` e issue   | `DIGITAL_ORIGINAL_RECEIVED_WITH_OPEN_DEVIATION`   |
+| `SCN-134` | `UNIDENTIFIED`.               | Sim ou não.               | `UNIDENTIFIED`                           | `DIGITAL_ORIGINAL_EVIDENCE_NOT_IDENTIFIED`        |
+
+`SCN-132` e `SCN-133` preservam as duas divergências como status e issue explícitos. `SCN-134` caracteriza que o desvio aberto isolado não é convertido em evidência textual de espera.
+
+### Aplicabilidade por modal de domínio
+
+| Cenário   | Modal     | Texto avaliado                      | Status caracterizado | Observação                                                                     |
+| --------- | --------- | ----------------------------------- | -------------------- | ------------------------------------------------------------------------------ |
+| `SCN-135` | `air`     | Evidência `AWAITING` ou `RECEIVED`. | `NOT_APPLICABLE`     | A dimensão não representa a mesma exigência operacional no aéreo.              |
+| `SCN-136` | `other`   | Evidência `AWAITING` ou `RECEIVED`. | `NOT_APPLICABLE`     | O modal está confirmado como não marítimo.                                     |
+| `SCN-137` | `unknown` | Qualquer evidência ou nenhuma.      | `UNIDENTIFIED`       | A aplicabilidade permanece indeterminada e produz issue de modal desconhecido. |
+
+Nenhum desses modais usa os literais do eTrack ou eComex. A futura camada de composição deverá fornecer o conceito de domínio já interpretado.
+
+### Ordem textual das evidências
+
+| Cenário   | Observação de entrada em ordem textual                                                                  | Evidência selecionada | Posição 1-based normalizada |
+| --------- | ------------------------------------------------------------------------------------------------------- | --------------------- | --------------------------- |
+| `SCN-138` | `Aguardando envio do BL original digitalizado // Original digitalizado OK`.                             | `RECEIVED`            | 46                          |
+| `SCN-139` | `Original digitalizado OK // Aguardando envio do BL original digitalizado`.                             | `AWAITING`            | 26                          |
+| `SCN-140` | `Aguardando envio do BL original digitalizado // Originais OK`.                                         | `RECEIVED`            | Maior posição normalizada.  |
+| `SCN-141` | `Originais OK // Aguardando envio do BL original digitalizado`.                                         | `AWAITING`            | Maior posição normalizada.  |
+| `SCN-142` | `Original digitalizado OK // Aguardando envio do BL original digitalizado // Original digitalizado OK`. | `RECEIVED`            | 71                          |
+
+Cada chave usa sua última ocorrência e vence a maior posição entre as três. `SCN-142` diferencia esta família do algoritmo de eventos, que usa somente a primeira ocorrência de cada chave.
+
+### Normalização, ausência e limites
+
+| Cenário   | Entrada ou variação                                                                                                    | Resultado caracterizado                                                            |
+| --------- | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `SCN-143` | Caixa, mapa explícito de acentos, pontuação entre palavras, múltiplos espaços, NBSP ou texto adicional antes e depois. | A evidência corresponde após somente a normalização documentada em `RULE-DIGITAL`. |
+| `SCN-144` | Observação `undefined`, vazia ou somente com espaços.                                                                  | Evidência `UNIDENTIFIED`, com reason code específico para cada condição.           |
+| `SCN-145` | `Original digitalizado`, `Aguardando envio do BL original` ou as palavras de confirmação em ordem incorreta.           | Evidência `UNIDENTIFIED`; fragmentos incompletos não são generalizados.            |
+
+Os cenários da Etapa 12 não determinam original físico, Mercante, correlação de fontes, classificação ou lifecycle de desvios. `hasOpenDigitalOriginalDeviation` é um fato pronto de presença ou ausência confirmada; sua produção e o tratamento de desconhecimento permanecem fora desta política.
+
 ## Matriz mínima de cobertura
 
 | Comportamento solicitado                       | Cenário                                      |
@@ -644,3 +702,7 @@ Os cenários da Etapa 11 não classificam nem contam desvios, não determinam cr
 | Precedência sobre ETA vencida                  | `SCN-111` a `SCN-117`                        |
 | Janela futura e independência da criticidade   | `SCN-118` a `SCN-127`                        |
 | Independência das contagens fora de pendência  | `SCN-128`                                    |
+| Matriz marítima do BL digitalizado             | `SCN-129` a `SCN-134`                        |
+| Aplicabilidade modal do BL digitalizado        | `SCN-135` a `SCN-137`                        |
+| Ordem textual das evidências documentais       | `SCN-138` a `SCN-142`                        |
+| Normalização e limites do BL digitalizado      | `SCN-143` a `SCN-145`                        |

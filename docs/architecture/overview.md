@@ -40,7 +40,7 @@ Inclui controllers NestJS e a aplicação Next.js. Traduz entradas e apresenta r
 - `apps/api/src/imports/ecomex`: contrato lógico, validação e normalização técnica específicos do eComex, ainda sem parser físico, endpoint, persistência ou caso de uso.
 - `apps/api/src/imports/shared`: representação e parsing técnico de datas ISO, compartilhados apenas porque possuem semântica idêntica nas duas fronteiras.
 - `apps/web`: shell mínimo da aplicação Next.js.
-- `packages/domain`: domínio puro com a elegibilidade para acompanhamento operacional, o reconhecimento do evento operacional, a determinação da etapa operacional, a criticidade operacional, as decisões individuais de impacto e lifecycle de desvios e o alerta operacional principal, mantendo essas dimensões independentes.
+- `packages/domain`: domínio puro com a elegibilidade para acompanhamento operacional, o reconhecimento do evento operacional, a determinação da etapa operacional, a criticidade operacional, as decisões individuais de impacto e lifecycle de desvios, o alerta operacional principal e a situação do BL original digitalizado, mantendo essas dimensões independentes.
 
 Nenhum outro pacote foi criado porque ainda não existe uso concreto.
 
@@ -92,6 +92,8 @@ A criticidade recebe ETA civil válida ou ausência confirmada, presença de che
 O alerta operacional principal recebe etapa, contagens prontas de desvios abertos classificados, ETA civil, presença de chegada e data de avaliação. A política reproduz a primeira condição verdadeira da coluna legada e retorna somente um alerta. Ela compartilha apenas o conceito e a diferença de datas civis com a criticidade, sem consumir seu resultado, contar desvios, detalhar Mercante ou documentos, nem ordenar o dashboard.
 
 A classificação de um desvio individual recebe descrição e observação preservadas por uma futura camada de mapeamento. Sua normalização textual é específica dessa família, reproduz somente o catálogo e os contextos caracterizados e não depende do contrato eComex. Separadamente, o lifecycle recebe apenas presença ou ausência de encerramento já validada. Nenhuma dessas políticas correlaciona fontes, agrega desvios, conta ocorrências ou gera alertas.
+
+A dimensão do BL original digitalizado separa o reconhecimento textual da decisão. O reconhecedor compara somente três evidências caracterizadas e seleciona a última posição normalizada. A política recebe modal de domínio, evidência já reconhecida e o fato pronto de existência do desvio aberto relacionado. Ela não busca nem correlaciona desvios, não determina original físico ou Mercante e preserva divergências entre evidência e desvio como estados e issues explícitos.
 
 ## Verificação arquitetural
 
