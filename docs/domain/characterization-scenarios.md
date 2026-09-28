@@ -797,6 +797,25 @@ A janela usa diferença assinada e somente limite superior. Não consulta critic
 
 Os cenários da Etapa 14 não implementam original físico, FEDEX, correlação entre fontes, desvios gerais, etapa, alerta principal, Application ou `OperationalAssessment`.
 
+## Composição do OperationalAssessment verificada na Etapa 15
+
+Os cenários desta seção verificam uma decisão arquitetural do novo sistema. Eles não caracterizam nova fórmula da planilha nem alteram a maturidade das políticas operacionais compostas. Os resultados são reproduzidos em `packages/domain/src/operational-assessment/assess-operational-process.spec.ts`.
+
+| Cenário   | Fatos compostos relevantes                                                                          | Resultado verificado                                                                                                                                                  |
+| --------- | --------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SCN-206` | Marítimo elegível, `TYPING_COMPLETED`, referência Mercante, BL digital e original físico recebidos. | Todas as oito decisões são preservadas completas e o resumo de desvios permanece disponível.                                                                          |
+| `SCN-207` | Etapa `PENDING`, dois blocking, um non-blocking e três desvios abertos não classificados.           | O alerta usa somente as contagens classificadas previstas; a contagem não classificada é preservada sem efeito inventado e as demais dimensões não são alteradas.     |
+| `SCN-208` | Aéreo, House presente e Agente ausente.                                                             | Original físico `NOT_APPLICABLE` pela heurística legado, Mercante e original digital `NOT_APPLICABLE`; etapa e alerta continuam independentes.                        |
+| `SCN-209` | Modal `unknown`.                                                                                    | As incertezas de original digital, original físico e Mercante permanecem em suas próprias decisões; não existe estado desconhecido global nem array global de issues. |
+| `SCN-210` | Observação sem evento reconhecido.                                                                  | Evento `UNIDENTIFIED`, etapa `REVIEW_OBSERVATION` e alerta `UNIDENTIFIED_EVENT`, sem replicar seus algoritmos na composição.                                          |
+| `SCN-211` | ETA vinte dias vencida, sem chegada, Mercante ausente e desvio físico aberto.                       | Coexistem criticidade `3`, alerta `ETA_OVERDUE_WITHOUT_ARRIVAL`, original físico `AWAITING` e Mercante `MISSING_WITHIN_SEVEN_DAYS`.                                   |
+| `SCN-212` | `TYPING_COMPLETED`, referência Mercante ausente, `Mercante aberto` e BL digital recebido.           | Coexistem etapa `AWAITING_MERCANTE` e Mercante `READY_TO_CHECK`; nenhuma decisão corrige a outra.                                                                     |
+| `SCN-213` | `TYPING_COMPLETED`, referência Mercante presente e BL digital pendente.                             | Coexistem etapa `READY_FOR_REVIEW` e Mercante `AWAITING_DIGITAL_ORIGINAL`; a divergência permanece visível.                                                           |
+| `SCN-214` | Processo registrado, portanto inelegível, com fatos suficientes para as demais políticas.           | Elegibilidade `ineligible` não interrompe evento, etapa, criticidade, alerta, documentos ou Mercante.                                                                 |
+| `SCN-215` | Modal desconhecido, evidência de atracação, sem ETA, e evento `TYPING_COMPLETED`.                   | Elegibilidade `undetermined` não interrompe as demais dimensões; cada resultado preserva seu próprio desconhecimento ou ausência.                                     |
+
+`SCN-207` não resolve `Q-ALERT-005`: desvios não classificados não entram silenciosamente em nenhuma contagem classificada. `SCN-212` e `SCN-213` são testes deliberados de tensão entre dimensões. A composição não decide qual saída é mais correta e não produz inconsistência cruzada global.
+
 ## Matriz mínima de cobertura
 
 | Comportamento solicitado                       | Cenário                                      |
@@ -819,6 +838,9 @@ Os cenários da Etapa 14 não implementam original físico, FEDEX, correlação 
 | Janela temporal do Mercante ausente            | `SCN-188` a `SCN-194`                        |
 | Disponibilidade digital aplicada ao Mercante   | `SCN-195` a `SCN-201`                        |
 | Normalização e limites do Mercante             | `SCN-202` a `SCN-205`                        |
+| Composição multidimensional do assessment      | `SCN-206` a `SCN-211`                        |
+| Tensões entre etapa e Mercante                 | `SCN-212`, `SCN-213`                         |
+| Elegibilidade sem curto-circuito               | `SCN-214`, `SCN-215`                         |
 | Processo com ETA e sem registro                | `SCN-015`                                    |
 | Processo com chegada que continua acompanhado  | `SCN-016`                                    |
 | Processo registrado                            | `SCN-017`, `SCN-024`                         |

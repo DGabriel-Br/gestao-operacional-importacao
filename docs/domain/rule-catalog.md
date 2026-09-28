@@ -537,3 +537,10 @@ A seleção da coluna principal de alerta foi caracterizada. A ordem global entr
 | RULE-MODEL-005 | Toda decisão futura deverá poder fornecer conceitualmente `value`, `reasonCodes`, `evidence` e `issues`.                                                                                                 |
 | RULE-MODEL-006 | A integração normaliza dados técnicos; a interpretação operacional pertence ao domínio.                                                                                                                  |
 | RULE-MODEL-007 | A implementação final dos tipos e funções permanece fora do escopo desta etapa.                                                                                                                          |
+| RULE-MODEL-008 | `OperationalAssessment` compõe decisões completas existentes e fatos resumidos de desvios; não cria status global, prontidão, prioridade, score ou nova regra operacional.                               |
+| RULE-MODEL-009 | Elegibilidade `ineligible` ou `undetermined` não apaga nem impede a avaliação das demais dimensões na fotografia diagnóstica.                                                                            |
+| RULE-MODEL-010 | Divergências entre etapa, documentos, Mercante e alerta permanecem simultaneamente representadas; nenhuma dimensão sobrescreve outra durante a composição.                                               |
+| RULE-MODEL-011 | Cada reconhecedor interpreta a observação com sua própria semântica caracterizada; a composição não cria normalização textual global.                                                                    |
+| RULE-MODEL-012 | Contagens e flags de desvios chegam prontas ao assessment. A composição não correlaciona fontes, não agrega listas e não atribui efeito à contagem não classificada.                                     |
+
+Os itens `RULE-MODEL-008` a `RULE-MODEL-012` são decisões arquiteturais implementadas na Etapa 15. Eles não são comportamentos legados caracterizados nem alteram a maturidade das famílias operacionais existentes.

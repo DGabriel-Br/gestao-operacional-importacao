@@ -40,7 +40,7 @@ Inclui controllers NestJS e a aplicação Next.js. Traduz entradas e apresenta r
 - `apps/api/src/imports/ecomex`: contrato lógico, validação e normalização técnica específicos do eComex, ainda sem parser físico, endpoint, persistência ou caso de uso.
 - `apps/api/src/imports/shared`: representação e parsing técnico de datas ISO, compartilhados apenas porque possuem semântica idêntica nas duas fronteiras.
 - `apps/web`: shell mínimo da aplicação Next.js.
-- `packages/domain`: domínio puro com a elegibilidade para acompanhamento operacional, o reconhecimento do evento operacional, a determinação da etapa operacional, a criticidade operacional, as decisões individuais de impacto e lifecycle de desvios, o alerta operacional principal e a situação do BL original digitalizado, mantendo essas dimensões independentes.
+- `packages/domain`: domínio puro com as políticas caracterizadas de acompanhamento, evento, etapa, criticidade, desvios, alerta principal, originais digital e físico e Mercante. `OperationalAssessment` coordena essas decisões sem fundi-las em status global.
 
 Nenhum outro pacote foi criado porque ainda não existe uso concreto.
 
@@ -94,6 +94,24 @@ O alerta operacional principal recebe etapa, contagens prontas de desvios aberto
 A classificação de um desvio individual recebe descrição e observação preservadas por uma futura camada de mapeamento. Sua normalização textual é específica dessa família, reproduz somente o catálogo e os contextos caracterizados e não depende do contrato eComex. Separadamente, o lifecycle recebe apenas presença ou ausência de encerramento já validada. Nenhuma dessas políticas correlaciona fontes, agrega desvios, conta ocorrências ou gera alertas.
 
 A dimensão do BL original digitalizado separa o reconhecimento textual da decisão. O reconhecedor compara somente três evidências caracterizadas e seleciona a última posição normalizada. A política recebe modal de domínio, evidência já reconhecida e o fato pronto de existência do desvio aberto relacionado. Ela não busca nem correlaciona desvios, não determina original físico ou Mercante e preserva divergências entre evidência e desvio como estados e issues explícitos.
+
+### Composição do OperationalAssessment
+
+`OperationalAssessment` é uma folha de composição pura dentro do Domain. Recebe fatos de domínio já interpretados, chama os reconhecedores e políticas existentes e preserva suas decisões completas:
+
+```text
+fatos válidos de domínio
+  -> políticas independentes existentes
+  -> OperationalAssessment multidimensional
+```
+
+A composição não recebe registros eTrack ou eComex, não faz parsing, não correlaciona fontes, não agrega listas de desvios e não decide inclusão na fila. As contagens abertas classificadas, a contagem aberta não classificada e as flags dos desvios específicos de originais chegam prontas. Somente as duas contagens já previstas alimentam o alerta principal; a contagem não classificada é preservada sem comportamento inferido.
+
+A mesma observação é entregue separadamente a cada reconhecedor. Não existe normalização textual global, pois cada família possui catálogo, normalização e precedência próprios. A etapa consome o evento reconhecido, o Mercante consome o status digital e o alerta consome a etapa. Essas dependências de cálculo não formam uma precedência global nem permitem que uma dimensão sobrescreva outra.
+
+Elegibilidade `ineligible` ou `undetermined` não encerra a composição. O assessment permanece uma fotografia diagnóstica com todas as dimensões calculáveis. Não existe `overallStatus`, prioridade, score, prontidão global ou array global de issues. Divergências entre etapa, Mercante, documentos e alerta permanecem simultaneamente visíveis em suas decisões de origem.
+
+O contrato inicial do assessment aceita os modais já suportados pela política de acompanhamento: `air`, `maritime` e `unknown`. O modal `other` continua disponível nas políticas que já o caracterizam, mas sua composição completa aguarda uma decisão explícita para acompanhamento operacional.
 
 ## Verificação arquitetural
 

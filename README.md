@@ -4,7 +4,7 @@ Aplicação web para gestão operacional de processos de importação. O projeto
 
 ## Estado atual
 
-O repositório contém a fundação técnica, as duas primeiras fronteiras de ingestão e as sete primeiras famílias de regras do domínio:
+O repositório contém a fundação técnica, as duas primeiras fronteiras de ingestão, nove famílias de regras do domínio e sua primeira composição multidimensional:
 
 - monorepo com pnpm workspaces;
 - aplicação NestJS mínima, sem endpoints de negócio;
@@ -16,6 +16,9 @@ O repositório contém a fundação técnica, as duas primeiras fronteiras de in
 - classificação explicável do impacto e do estado aberto ou encerrado de desvios individuais;
 - determinação explicável do alerta operacional principal com a precedência legada da coluna de Processamento;
 - reconhecimento textual e determinação explicável da situação do BL original digitalizado, sem misturá-lo ao original físico ou ao Mercante;
+- reconhecimento textual e determinação explicável do original físico, incluindo a heurística legado de FEDEX e sua janela própria de ETA;
+- reconhecimento textual e determinação explicável da situação operacional do Mercante;
+- composição pura `OperationalAssessment`, que preserva as decisões completas sem criar status global, prioridade ou correlação entre fontes;
 - documentação de arquitetura e descoberta do domínio;
 - contrato lógico e normalização técnica de linhas do eTrack;
 - contrato lógico e normalização técnica de linhas do eComex;

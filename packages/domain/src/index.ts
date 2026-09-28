@@ -140,3 +140,10 @@ export {
   type MercanteStatus,
   type MercanteTransportMode,
 } from './mercante/determine-mercante-status.js'
+
+export {
+  assessOperationalProcess,
+  type OperationalAssessment,
+  type OperationalAssessmentFacts,
+  type OperationalDeviationSummary,
+} from './operational-assessment/assess-operational-process.js'
