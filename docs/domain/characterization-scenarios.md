@@ -1,6 +1,6 @@
 # Cenários de caracterização
 
-Estes cenários são exemplos documentais anonimizados para confrontar o comportamento relatado com a planilha atual. As famílias caracterizadas nas Etapas 6 a 13 possuem testes executáveis no pacote de domínio.
+Estes cenários são exemplos documentais anonimizados para confrontar o comportamento relatado com a planilha atual. As famílias caracterizadas nas Etapas 6 a 14 possuem testes executáveis no pacote de domínio.
 
 Os resultados chamados de `Relatado` derivam do briefing operacional da Etapa 2 em 2026-09-26. Eles ainda precisam de evidência reproduzível da planilha e aprovação humana antes de orientar testes de domínio.
 
@@ -51,7 +51,7 @@ Alertas, integrações e demais afirmações desses cenários amplos continuam a
 
 ## SCN-002: Marítimo com Mercante pronto para conferência
 
-**Regras relacionadas**: `RULE-STAGE-002`, `RULE-MERC-003`
+**Regras relacionadas**: `RULE-STAGE-002`, `RULE-MERC-005`
 
 **Dados relevantes**
 
@@ -314,7 +314,7 @@ Alertas, integrações e demais afirmações desses cenários amplos continuam a
 
 ## SCN-013: Pendência posterior no Mercante
 
-**Regras relacionadas**: `RULE-MERC-001`, `RULE-MERC-002`
+**Regras relacionadas**: `RULE-MERC-003`, `RULE-MERC-004`
 
 **Dados relevantes**
 
@@ -329,9 +329,13 @@ Alertas, integrações e demais afirmações desses cenários amplos continuam a
 - A pendência no Mercante volta a ficar ativa.
 - Mercante não permanece simplesmente como conferido.
 
+**Caracterização posterior**
+
+- `SCN-174` caracteriza que a última ocorrência de `Pendência no Mercante` prevalece sobre a conferência anterior e produz `MercanteStatus.PENDING`.
+- Cada chave usa sua última ocorrência normalizada antes da comparação entre pendência e conferência.
+
 **Evidência necessária**
 
-- Confirmar como a planilha determina a ordem das evidências.
 - Confirmar o efeito na etapa, prontidão e alertas.
 
 ## SCN-014: Evidências conflitantes de BL digitalizado
@@ -719,6 +723,80 @@ A combinação de `SCN-154` é somente uma heurística legado. Ela não cria ent
 
 Os cenários da Etapa 13 não implementam Mercante, pós-registro, faturamento, correlação eTrack/eComex ou composição de `OperationalAssessment`.
 
+## Mercante caracterizado na Etapa 14
+
+A fonte da caracterização é a precedência textual, a existência operacional, a janela temporal e a projeção do BL digitalizado descritas pelo Mestre na Etapa 14 em 2026-09-28. Os resultados são reproduzidos em `packages/domain/src/mercante/` e ainda aguardam aprovação de negócio.
+
+### Evidências textuais e precedência
+
+| Cenário   | Observação ou condição                                                             | Resultado caracterizado                                                  |
+| --------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `SCN-171` | `Pendência no Mercante`.                                                           | Evidência `PENDING` e status `PENDING`.                                  |
+| `SCN-172` | `Mercante conferido com BL e sistema`.                                             | Evidência `CHECKED` e status `CHECKED`.                                  |
+| `SCN-173` | Pendência seguida de conferência.                                                  | `CHECKED`, pois a última evidência definitiva está mais à direita.       |
+| `SCN-174` | Conferência seguida de pendência.                                                  | `PENDING`, pela ordem textual inversa.                                   |
+| `SCN-175` | Uma evidência definitiva aparece, a outra aparece e a primeira se repete ao final. | A repetição final prevalece porque cada chave usa sua última ocorrência. |
+| `SCN-176` | `Mercante aberto`, sem referência CE.                                              | Evidência `EXISTS`; não significa `CHECKED`.                             |
+| `SCN-177` | `Mercante disponível`, sem referência CE.                                          | Evidência `EXISTS`; não significa `CHECKED`.                             |
+| `SCN-178` | `Mercante consultado`, sem referência CE.                                          | Evidência `EXISTS`; não significa `CHECKED`.                             |
+
+Pendência e conferência são definitivas para esta dimensão. Uma evidência posterior apenas de existência não sobrescreve nenhuma delas.
+
+### Aplicabilidade e existência
+
+| Cenário   | Modal e fatos                                                            | Resultado caracterizado                               |
+| --------- | ------------------------------------------------------------------------ | ----------------------------------------------------- |
+| `SCN-179` | `maritime`, referência CE presente, BL disponível.                       | `READY_TO_CHECK`.                                     |
+| `SCN-180` | `maritime`, referência CE presente, BL pendente.                         | `AWAITING_DIGITAL_ORIGINAL`.                          |
+| `SCN-181` | `maritime`, referência CE presente, BL não identificado.                 | `VERIFY` com issue explícita.                         |
+| `SCN-182` | `maritime`, somente referência CE presente.                              | Mercante existe, mas não recebe status `CHECKED`.     |
+| `SCN-183` | `maritime`, somente `Mercante aberto`.                                   | Mercante existe, mas não recebe status `CHECKED`.     |
+| `SCN-184` | `air`, com qualquer evidência de Mercante.                               | `NOT_APPLICABLE`.                                     |
+| `SCN-185` | `other`, com qualquer evidência de Mercante.                             | `NOT_APPLICABLE`.                                     |
+| `SCN-186` | `unknown`, com qualquer evidência.                                       | `UNIDENTIFIED`, aplicabilidade indeterminada e issue. |
+| `SCN-187` | `maritime`, Mercante existente e `DigitalOriginalStatus.NOT_APPLICABLE`. | `VERIFY` com issue de combinação inconsistente.       |
+
+A existência resulta de referência CE presente ou de uma evidência textual reconhecida. A política recebe `hasMercanteReference` pronto e não interpreta o cabeçalho externo.
+
+### Janela temporal para Mercante ausente
+
+| Cenário   | Diferença `ETA - avaliação` ou ausência | Status caracterizado         |
+| --------- | --------------------------------------- | ---------------------------- |
+| `SCN-188` | `0`, ETA hoje.                          | `MISSING_WITHIN_SEVEN_DAYS`. |
+| `SCN-189` | `7`.                                    | `MISSING_WITHIN_SEVEN_DAYS`. |
+| `SCN-190` | `8`.                                    | `AWAITING_OPENING`.          |
+| `SCN-191` | `-1`, ETA ontem.                        | `MISSING_WITHIN_SEVEN_DAYS`. |
+| `SCN-192` | `-20`, ETA vinte dias vencida.          | `MISSING_WITHIN_SEVEN_DAYS`. |
+| `SCN-193` | ETA ausente.                            | `AWAITING_OPENING`.          |
+| `SCN-194` | Diferença `7` atravessando mês ou ano.  | `MISSING_WITHIN_SEVEN_DAYS`. |
+
+A janela usa diferença assinada e somente limite superior. Não consulta criticidade, original físico ou relógio global.
+
+### Projeção do BL digitalizado e precedência final
+
+| Cenário   | Mercante existente e status digital   | Projeção        | Status do Mercante           |
+| --------- | ------------------------------------- | --------------- | ---------------------------- |
+| `SCN-195` | `RECEIVED`.                           | Disponível.     | `READY_TO_CHECK`.            |
+| `SCN-196` | `RECEIVED_WITH_OPEN_DEVIATION`.       | Disponível.     | `READY_TO_CHECK`.            |
+| `SCN-197` | `AWAITING`.                           | Pendente.       | `AWAITING_DIGITAL_ORIGINAL`. |
+| `SCN-198` | `PENDING_WITHOUT_OPEN_DEVIATION`.     | Pendente.       | `AWAITING_DIGITAL_ORIGINAL`. |
+| `SCN-199` | `UNIDENTIFIED`.                       | Desconhecido.   | `VERIFY` com issue.          |
+| `SCN-200` | `PENDING`, ETA vencida e BL recebido. | Não consultada. | `PENDING`.                   |
+| `SCN-201` | `CHECKED`, ETA vencida e BL pendente. | Não consultada. | `CHECKED`.                   |
+
+`SCN-196` preserva que a divergência do desvio continua na dimensão digital, mas não apaga a disponibilidade do documento. `SCN-198` preserva que a ausência do desvio não converte uma evidência de espera em recebimento.
+
+### Normalização e limites
+
+| Cenário   | Entrada ou variação                                                                                                  | Resultado caracterizado                                                        |
+| --------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `SCN-202` | Caixa, mapa explícito de acentos, pontuação, múltiplos espaços, NBSP ou texto adicional.                             | Reconhece somente as cinco chaves após a normalização documentada.             |
+| `SCN-203` | Observação ausente, vazia ou somente com espaços.                                                                    | Evidência `UNIDENTIFIED`, com razão específica para cada condição.             |
+| `SCN-204` | Fragmentos incompletos como `Mercante conferido`, `Pendência Mercante` ou frases não catalogadas.                    | Evidência `UNIDENTIFIED`; não há fuzzy matching nem sinônimos.                 |
+| `SCN-205` | Referência CE presente, sem evidência de conferência, combinada com etapa, alerta ou original físico não fornecidos. | A decisão usa somente seus fatos e não altera nenhuma dessas outras dimensões. |
+
+Os cenários da Etapa 14 não implementam original físico, FEDEX, correlação entre fontes, desvios gerais, etapa, alerta principal, Application ou `OperationalAssessment`.
+
 ## Matriz mínima de cobertura
 
 | Comportamento solicitado                       | Cenário                                      |
@@ -735,6 +813,12 @@ Os cenários da Etapa 13 não implementam Mercante, pós-registro, faturamento, 
 | BL original digitalizado pendente              | `SCN-010`                                    |
 | BL original físico pendente                    | `SCN-011`                                    |
 | Exceção FEDEX a validar                        | `SCN-012`                                    |
+| Pendência e conferência do Mercante            | `SCN-171` a `SCN-175`                        |
+| Existência do Mercante sem conferência         | `SCN-176` a `SCN-183`                        |
+| Aplicabilidade do Mercante por modal           | `SCN-184` a `SCN-187`                        |
+| Janela temporal do Mercante ausente            | `SCN-188` a `SCN-194`                        |
+| Disponibilidade digital aplicada ao Mercante   | `SCN-195` a `SCN-201`                        |
+| Normalização e limites do Mercante             | `SCN-202` a `SCN-205`                        |
 | Processo com ETA e sem registro                | `SCN-015`                                    |
 | Processo com chegada que continua acompanhado  | `SCN-016`                                    |
 | Processo registrado                            | `SCN-017`, `SCN-024`                         |

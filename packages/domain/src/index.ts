@@ -119,3 +119,24 @@ export {
   type PhysicalOriginalStatus,
   type PhysicalOriginalTransportMode,
 } from './physical-original/determine-physical-original-status.js'
+
+export {
+  recognizeMercanteEvidence,
+  type MercanteEvidence,
+  type MercanteEvidenceKind,
+  type MercanteEvidenceReasonCode,
+  type RecognizedMercanteEvidence,
+  type UnidentifiedMercanteEvidence,
+} from './mercante/recognize-mercante-evidence.js'
+
+export {
+  determineMercanteStatus,
+  type MercanteDecision,
+  type MercanteDecisionEvidence,
+  type MercanteDigitalOriginalAvailability,
+  type MercanteFacts,
+  type MercanteIssue,
+  type MercanteReasonCode,
+  type MercanteStatus,
+  type MercanteTransportMode,
+} from './mercante/determine-mercante-status.js'

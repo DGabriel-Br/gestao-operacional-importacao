@@ -2,7 +2,7 @@
 
 Este catálogo descreve o comportamento atual relatado da ferramenta. Ele não é uma implementação, não define tipos finais e não aprova automaticamente cada comportamento como requisito futuro.
 
-Os comportamentos marcados como `Relatado` foram fornecidos no briefing operacional da Etapa 2 em 2026-09-26. As famílias `RULE-TRACK`, `RULE-EVENT`, `RULE-STAGE`, `RULE-CRIT`, `RULE-DEV`, `RULE-ALERT` e `RULE-DIGITAL` possuem caracterizações posteriores baseadas na lógica das fórmulas explicitamente descrita pelo Mestre.
+Os comportamentos marcados como `Relatado` foram fornecidos no briefing operacional da Etapa 2 em 2026-09-26. As famílias `RULE-TRACK`, `RULE-EVENT`, `RULE-STAGE`, `RULE-CRIT`, `RULE-DEV`, `RULE-ALERT`, `RULE-DIGITAL`, `RULE-PHYSICAL` e `RULE-MERC` possuem caracterizações posteriores baseadas na lógica das fórmulas explicitamente descrita pelo Mestre.
 
 ## Como interpretar o catálogo
 
@@ -298,27 +298,77 @@ A janela de prioridade futura usa dias corridos e exige diferença entre zero e 
 
 ## Mercante
 
-Aplicável principalmente ao modal marítimo.
+**Fonte da caracterização**: evidências, precedência, regra de existência, janela temporal e projeção do BL digitalizado descritas pelo Mestre na Etapa 14 em 2026-09-28 e reproduzidas em `packages/domain/src/mercante/`.
 
-Situações relatadas:
+Mercante é uma dimensão exclusiva do modal marítimo. A política recebe fatos de domínio já interpretados e não conhece cabeçalhos, registros eTrack, desvios, original físico, etapa ou alerta principal.
 
-- `Aguardando abertura`;
-- `Mercante ausente com ETA próxima`;
-- `Mercante aberto`;
-- `Conferir Mercante`;
-- `Mercante conferido`;
-- `Pendência no Mercante`;
-- `Aguardando BL digitalizado`;
-- `Verificar Mercante`.
+### Status caracterizados
 
-| ID            | Evidência ou condição relatada                           | Resultado                                                          | Estado e lacunas                                                    |
-| ------------- | -------------------------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------- |
-| RULE-MERC-001 | Observação contém `MERCANTE CONFERIDO COM BL E SISTEMA`. | Evidência de Mercante conferido.                                   | Relatado.                                                           |
-| RULE-MERC-002 | Evidência posterior indica `PENDÊNCIA NO MERCANTE`.      | A pendência volta a ficar ativa.                                   | Relatado. “Posterior” ainda precisa de definição operacional exata. |
-| RULE-MERC-003 | `Nº CE MERCANTE` existe.                                 | Mercante existente, mas não necessariamente conferido.             | Relatado.                                                           |
-| RULE-MERC-004 | Existe pendência no Mercante.                            | Não deve ser tratada automaticamente como desvio impeditivo comum. | Relatado. A interação exata com bloqueios permanece aberta.         |
+| Código estável              | Equivalente conceitual no legado        |
+| --------------------------- | --------------------------------------- |
+| `NOT_APPLICABLE`            | Controle de Mercante não aplicável.     |
+| `PENDING`                   | Pendência no Mercante.                  |
+| `CHECKED`                   | Mercante conferido.                     |
+| `MISSING_WITHIN_SEVEN_DAYS` | Mercante ausente com ETA em até 7 dias. |
+| `AWAITING_OPENING`          | Aguardando abertura do Mercante.        |
+| `AWAITING_DIGITAL_ORIGINAL` | Aguardando BL digitalizado.             |
+| `READY_TO_CHECK`            | Conferir Mercante.                      |
+| `VERIFY`                    | Verificar Mercante.                     |
+| `UNIDENTIFIED`              | Aplicabilidade não determinada.         |
 
-`RULE-STAGE-002` caracteriza que a presença da referência Mercante produz a etapa legada `READY_FOR_REVIEW`. Isso não afirma que o Mercante esteja aberto ou conferido, nem resolve quais condições a regra futura de prontidão deverá exigir.
+Os equivalentes conceituais documentam o legado e não são textos de interface definidos pelo Domain.
+
+### Evidências e precedência textual
+
+| Evidência estável | Texto caracterizado                                                |
+| ----------------- | ------------------------------------------------------------------ |
+| `PENDING`         | `Pendência no Mercante`.                                           |
+| `CHECKED`         | Fragmento `Mercante conferido com BL`.                             |
+| `EXISTS`          | `Mercante aberto`, `Mercante disponível` ou `Mercante consultado`. |
+| `UNIDENTIFIED`    | Nenhuma evidência conhecida.                                       |
+
+Para cada chave, o reconhecimento usa a última ocorrência no texto normalizado. Entre `PENDING` e `CHECKED`, vence a maior posição. Evidências `EXISTS` só são selecionadas quando nenhuma evidência definitiva de pendência ou conferência foi encontrada. Assim, existência posterior não sobrescreve pendência ou conferência.
+
+### Matriz caracterizada
+
+| ID            | Condição caracterizada                                                                                                    | Resultado                           | Estado e limites                                                                           |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------ |
+| RULE-MERC-001 | Modal `air` ou `other`.                                                                                                   | `NOT_APPLICABLE`.                   | Caracterizado, não aprovado.                                                               |
+| RULE-MERC-002 | Modal `unknown`.                                                                                                          | `UNIDENTIFIED` e issue explícita.   | Aplicabilidade indeterminada, sem presumir modal marítimo.                                 |
+| RULE-MERC-003 | A última evidência definitiva é `Pendência no Mercante`.                                                                  | `PENDING`.                          | Caracterizado, não aprovado. Precede ETA e BL digitalizado.                                |
+| RULE-MERC-004 | A última evidência definitiva é `Mercante conferido com BL`.                                                              | `CHECKED`.                          | Caracterizado, não aprovado. Precede ETA e BL digitalizado.                                |
+| RULE-MERC-005 | Referência CE presente ou evidência textual `PENDING`, `CHECKED` ou `EXISTS`.                                             | Mercante existente.                 | Existência não significa conferência.                                                      |
+| RULE-MERC-006 | Mercante não existente, ETA presente e `ETA - avaliação <= 7`.                                                            | `MISSING_WITHIN_SEVEN_DAYS`.        | Caracterizado, não aprovado. Possui somente limite superior e inclui qualquer ETA vencida. |
+| RULE-MERC-007 | Mercante não existente, ETA ausente ou `ETA - avaliação > 7`.                                                             | `AWAITING_OPENING`.                 | Caracterizado, não aprovado.                                                               |
+| RULE-MERC-008 | Mercante existente, sem pendência ou conferência dominante, BL digitalizado `RECEIVED` ou `RECEIVED_WITH_OPEN_DEVIATION`. | `READY_TO_CHECK`.                   | O desvio aberto não apaga a evidência positiva de disponibilidade.                         |
+| RULE-MERC-009 | Mesmo contexto com BL digitalizado `AWAITING` ou `PENDING_WITHOUT_OPEN_DEVIATION`.                                        | `AWAITING_DIGITAL_ORIGINAL`.        | A ausência do desvio não transforma evidência de pendência em disponibilidade.             |
+| RULE-MERC-010 | Mesmo contexto com BL digitalizado `UNIDENTIFIED`.                                                                        | `VERIFY` e issue explícita.         | A incerteza documental permanece visível.                                                  |
+| RULE-MERC-011 | Processo marítimo existente com BL digitalizado `NOT_APPLICABLE`.                                                         | `VERIFY` e issue de inconsistência. | A combinação não é convertida silenciosamente em disponível ou pendente.                   |
+| RULE-MERC-012 | Uma pendência textual de Mercante existe.                                                                                 | Não consulta desvios gerais.        | Pendência de Mercante não equivale automaticamente a desvio impeditivo eComex.             |
+
+### Normalização caracterizada
+
+Na ordem aplicada, a observação e as cinco chaves:
+
+1. são convertidas para minúsculas;
+2. têm espaço não separável convertido para espaço comum;
+3. têm caracteres de controle ASCII equivalentes a `CLEAN` removidos;
+4. aplicam somente os mapas `á à â ã ä -> a`, `é è ê ë -> e`, `í ì î ï -> i`, `ó ò ô õ ö -> o`, `ú ù û ü -> u` e `ç -> c`;
+5. substituem caracteres fora de `a-z`, `0-9` e espaço por espaço;
+6. colapsam espaços e aplicam `trim`.
+
+A busca é literal, sem fuzzy matching, sinônimos, remoção de artigos ou reutilização do reconhecedor de eventos. Observação ausente, vazia, somente com espaços e preenchida sem evidência possuem razões distintas.
+
+### Precedência completa
+
+1. `air` e `other` produzem `NOT_APPLICABLE`; `unknown` preserva aplicabilidade indeterminada.
+2. Evidência dominante `PENDING` produz `PENDING`.
+3. Evidência dominante `CHECKED` produz `CHECKED`.
+4. Sem evidência definitiva, a política determina existência pela referência CE ou por evidência textual.
+5. Sem existência, aplica a janela de ETA com somente limite superior.
+6. Com existência, projeta somente a disponibilidade do BL digitalizado.
+
+`RULE-STAGE-002` continua caracterizando separadamente que a presença da referência Mercante produz a etapa legada `READY_FOR_REVIEW`. Isso não afirma que o Mercante esteja aberto ou conferido. O original físico e a heurística FEDEX não participam da decisão do Mercante.
 
 ## BL original digitalizado
 
@@ -466,12 +516,13 @@ Estas precedências são locais. Elas não formam uma ordem global de avaliaçã
 
 1. A presença de `Data Registro` retira o processo da fila operacional principal.
 2. Entre eventos reconhecidos nas observações, o algoritmo legado seleciona a maior entre as primeiras posições normalizadas. Isso não comprova o último evento semântico nem determina a etapa.
-3. Para BL digitalizado, prevalece a maior entre as últimas posições normalizadas das três evidências caracterizadas. A precedência do Mercante continua aberta.
-4. Na etapa `Pendência`, desvios impeditivos abertos determinam bloqueio antes da análise dos não impeditivos.
-5. Na etapa `Pendência`, ausência total de desvios abertos determina inconsistência.
-6. Depois de `Digitação OK`, regras do modal podem substituir a etapa direta por uma espera específica ou prontidão.
-7. Na criticidade, ETA ausente encerra a avaliação sem nível numérico; com ETA presente, chegada tem precedência sobre as faixas de diferença; sem chegada, aplicam-se em ordem os limites `<= 5`, `<= 7` e `> 7`.
-8. No alerta principal, aplica-se integralmente a ordem 1 a 18 da seção `Alertas operacionais`; `REVIEW_OBSERVATION`, todos os ramos de `PENDING` e `TYPING_ERROR` precedem ETA vencida, que precede prioridades futuras e mapeamentos normais da etapa.
+3. Para BL digitalizado, prevalece a maior entre as últimas posições normalizadas das três evidências caracterizadas.
+4. Para Mercante, prevalece a maior entre as últimas posições normalizadas de pendência e conferência; evidências de existência só participam na ausência das duas.
+5. Na etapa `Pendência`, desvios impeditivos abertos determinam bloqueio antes da análise dos não impeditivos.
+6. Na etapa `Pendência`, ausência total de desvios abertos determina inconsistência.
+7. Depois de `Digitação OK`, regras do modal podem substituir a etapa direta por uma espera específica ou prontidão.
+8. Na criticidade, ETA ausente encerra a avaliação sem nível numérico; com ETA presente, chegada tem precedência sobre as faixas de diferença; sem chegada, aplicam-se em ordem os limites `<= 5`, `<= 7` e `> 7`.
+9. No alerta principal, aplica-se integralmente a ordem 1 a 18 da seção `Alertas operacionais`; `REVIEW_OBSERVATION`, todos os ramos de `PENDING` e `TYPING_ERROR` precedem ETA vencida, que precede prioridades futuras e mapeamentos normais da etapa.
 
 A seleção da coluna principal de alerta foi caracterizada. A ordem global entre essa saída, documentos, sinais específicos de Mercante, prioridades de dashboard e outras dimensões ainda precisa ser caracterizada.
 
