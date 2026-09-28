@@ -1,6 +1,6 @@
 # Cenários de caracterização
 
-Estes cenários são exemplos documentais anonimizados para confrontar o comportamento relatado com a planilha atual. As famílias caracterizadas nas Etapas 6 a 12 possuem testes executáveis no pacote de domínio.
+Estes cenários são exemplos documentais anonimizados para confrontar o comportamento relatado com a planilha atual. As famílias caracterizadas nas Etapas 6 a 13 possuem testes executáveis no pacote de domínio.
 
 Os resultados chamados de `Relatado` derivam do briefing operacional da Etapa 2 em 2026-09-26. Eles ainda precisam de evidência reproduzível da planilha e aprovação humana antes de orientar testes de domínio.
 
@@ -257,7 +257,7 @@ Alertas, integrações e demais afirmações desses cenários amplos continuam a
 
 ## SCN-011: BL original físico pendente
 
-**Regras relacionadas**: `RULE-PHYSICAL-001`
+**Regras relacionadas**: `RULE-PHYSICAL-010`, `RULE-PHYSICAL-011`, `Q-DOC-013`
 
 **Dados relevantes**
 
@@ -270,6 +270,12 @@ Alertas, integrações e demais afirmações desses cenários amplos continuam a
 **Resultado relatado a validar**
 
 - Situação esperada na ferramenta atual: `Aguardando BL original físico`.
+
+**Caracterização posterior**
+
+- `SCN-160` caracteriza `AWAITING` quando ETA existe, sua diferença para a avaliação é `<= 7` e existe desvio aberto relacionado.
+- `SCN-161` caracteriza `PENDING_WITHOUT_OPEN_DEVIATION` na mesma condição de limite superior sem o desvio esperado.
+- Este cenário amplo não informa ETA nem o fato de desvio e, isoladamente, não determina qual status se aplica.
 
 **Evidência necessária**
 
@@ -654,6 +660,65 @@ Cada chave usa sua última ocorrência e vence a maior posição entre as três.
 
 Os cenários da Etapa 12 não determinam original físico, Mercante, correlação de fontes, classificação ou lifecycle de desvios. `hasOpenDigitalOriginalDeviation` é um fato pronto de presença ou ausência confirmada; sua produção e o tratamento de desconhecimento permanecem fora desta política.
 
+## Original físico caracterizado na Etapa 13
+
+A fonte da caracterização é a evidência física, a heurística legado, sua precedência e a janela temporal descritas pelo Mestre na Etapa 13 em 2026-09-27. Os resultados são reproduzidos em `packages/domain/src/physical-original/` e ainda aguardam aprovação de negócio.
+
+### Evidência física independente do digital
+
+| Cenário   | Entrada ou variação                                                                                     | Resultado da evidência física                            |
+| --------- | ------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| `SCN-146` | `Originais OK`.                                                                                         | `RECEIVED`.                                              |
+| `SCN-147` | Caixa, mapa explícito de acentos, pontuação entre palavras, múltiplos espaços, NBSP ou texto adicional. | `RECEIVED` após somente a normalização documentada.      |
+| `SCN-148` | Observação ausente, vazia ou somente com espaços.                                                       | `UNIDENTIFIED`, com razão específica para cada condição. |
+| `SCN-149` | `Original digitalizado OK`, sem outra evidência física.                                                 | `UNIDENTIFIED`; o status digital não é proxy do físico.  |
+| `SCN-150` | `Originais`, `OK Originais`, `Originais recebidos OK` ou sequência interrompida por controle ASCII.     | `UNIDENTIFIED`; não há fuzzy matching ou sinônimos.      |
+
+`SCN-146` não funde as dimensões: `Originais OK` pode alimentar separadamente as políticas física e digital porque o legado usa a mesma frase nas duas. A decisão física nunca recebe `DigitalOriginalStatus`.
+
+### Aplicabilidade e heurística legado
+
+| Cenário   | Modal e fatos confirmados                              | Aplicabilidade ou status                               | Reason code                                    |
+| --------- | ------------------------------------------------------ | ------------------------------------------------------ | ---------------------------------------------- |
+| `SCN-151` | `maritime`, com qualquer combinação de House e Agente. | `APPLICABLE`.                                          | `PHYSICAL_ORIGINAL_APPLICABLE`                 |
+| `SCN-152` | `air`, House ausente e Agente ausente.                 | `APPLICABLE`; não presume FEDEX.                       | `PHYSICAL_ORIGINAL_APPLICABLE`                 |
+| `SCN-153` | `air`, House presente e Agente presente.               | `APPLICABLE`; não presume FEDEX.                       | `PHYSICAL_ORIGINAL_APPLICABLE`                 |
+| `SCN-154` | `air`, House presente e Agente ausente.                | `NOT_APPLICABLE`.                                      | `LEGACY_FEDEX_EXCEPTION_MATCHED`               |
+| `SCN-155` | `other`.                                               | Aplicabilidade `UNDETERMINED` e status `UNIDENTIFIED`. | `PHYSICAL_ORIGINAL_APPLICABILITY_UNDETERMINED` |
+| `SCN-156` | `unknown`.                                             | Aplicabilidade `UNDETERMINED` e status `UNIDENTIFIED`. | `PHYSICAL_ORIGINAL_APPLICABILITY_UNDETERMINED` |
+
+A combinação de `SCN-154` é somente uma heurística legado. Ela não cria entidade FEDEX nem afirma a transportadora real. `other` e `unknown` possuem issues distintos, embora preservem o mesmo status indeterminado.
+
+### Matriz de recebimento e desvio relacionado
+
+| Cenário   | Evidência de recebimento                                    | Desvio aberto relacionado | Status caracterizado                      | Reason code                                        |
+| --------- | ----------------------------------------------------------- | ------------------------- | ----------------------------------------- | -------------------------------------------------- |
+| `SCN-157` | Datas Originais presente.                                   | Não.                      | `RECEIVED`.                               | `PHYSICAL_ORIGINAL_RECEIVED`                       |
+| `SCN-158` | `Originais OK`, sem Datas Originais.                        | Não.                      | `RECEIVED`.                               | `PHYSICAL_ORIGINAL_RECEIVED`                       |
+| `SCN-159` | Datas Originais ou `Originais OK`.                          | Sim.                      | `RECEIVED_WITH_OPEN_DEVIATION` e issue.   | `PHYSICAL_ORIGINAL_RECEIVED_WITH_OPEN_DEVIATION`   |
+| `SCN-160` | Nenhuma, ETA presente e diferença `ETA - avaliação <= 7`.   | Sim.                      | `AWAITING`.                               | `PHYSICAL_ORIGINAL_AWAITING_WITH_OPEN_DEVIATION`   |
+| `SCN-161` | Nenhuma, a mesma condição de limite superior.               | Não.                      | `PENDING_WITHOUT_OPEN_DEVIATION` e issue. | `PHYSICAL_ORIGINAL_PENDING_WITHOUT_OPEN_DEVIATION` |
+| `SCN-162` | Datas Originais ou `Originais OK` em processo aéreo normal. | Sim ou não.               | A mesma matriz de recebimento aplicável.  | Razão correspondente à presença do desvio.         |
+
+`hasOpenPhysicalOriginalDeviation` chega pronto e representa presença ou ausência confirmada. Esses cenários não localizam, classificam, correlacionam ou contam desvios.
+
+### Precedência da exceção e janela de sete dias
+
+| Cenário   | Combinação                                                          | Resultado                                                                      |
+| --------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `SCN-163` | Heurística legado de `SCN-154` e Datas Originais presente.          | `NOT_APPLICABLE`; a exceção precede o recebimento.                             |
+| `SCN-164` | Heurística legado de `SCN-154` e `Originais OK`.                    | `NOT_APPLICABLE`; a exceção precede o recebimento.                             |
+| `SCN-165` | Sem recebimento, ETA exatamente sete dias à frente e desvio aberto. | `AWAITING`, com diferença `7`.                                                 |
+| `SCN-166` | A mesma diferença `7` atravessando mês ou ano.                      | `AWAITING`; usa dias civis gregorianos.                                        |
+| `SCN-167` | Sem recebimento, ETA oito dias à frente, com ou sem desvio.         | `UNIDENTIFIED`, preservando resultado legado ainda não fornecido.              |
+| `SCN-168` | Recebimento confirmado e ETA futura distante.                       | O recebimento prevalece e produz `RECEIVED` ou `RECEIVED_WITH_OPEN_DEVIATION`. |
+| `SCN-169` | Sem recebimento e ETA vencida por 1 ou 20 dias.                     | Com desvio aberto, `AWAITING`; sem desvio, `PENDING_WITHOUT_OPEN_DEVIATION`.   |
+| `SCN-170` | Sem recebimento e ETA ausente.                                      | `UNIDENTIFIED`, com issue de ETA ausente.                                      |
+
+`SCN-169` preserva a peculiaridade da fórmula: a janela possui somente limite superior, então diferenças negativas continuam satisfazendo `<= 7`, sem reutilizar criticidade. `SCN-167` e `SCN-170` caracterizam a preservação explícita da incerteza no novo domínio, não um resultado da planilha. O resultado legado dessas duas combinações permanece em `Q-DOC-013`.
+
+Os cenários da Etapa 13 não implementam Mercante, pós-registro, faturamento, correlação eTrack/eComex ou composição de `OperationalAssessment`.
+
 ## Matriz mínima de cobertura
 
 | Comportamento solicitado                       | Cenário                                      |
@@ -706,3 +771,7 @@ Os cenários da Etapa 12 não determinam original físico, Mercante, correlaçã
 | Aplicabilidade modal do BL digitalizado        | `SCN-135` a `SCN-137`                        |
 | Ordem textual das evidências documentais       | `SCN-138` a `SCN-142`                        |
 | Normalização e limites do BL digitalizado      | `SCN-143` a `SCN-145`                        |
+| Evidência de original físico                   | `SCN-146` a `SCN-150`                        |
+| Aplicabilidade e heurística legado física      | `SCN-151` a `SCN-156`                        |
+| Matriz física de recebimento e desvio          | `SCN-157` a `SCN-162`                        |
+| Precedência FEDEX e janela física de ETA       | `SCN-163` a `SCN-170`                        |

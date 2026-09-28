@@ -92,3 +92,30 @@ export {
   type DigitalOriginalStatus,
   type DigitalOriginalTransportMode,
 } from './digital-original/determine-digital-original-status.js'
+
+export {
+  recognizePhysicalOriginalEvidence,
+  type PhysicalOriginalEvidence,
+  type PhysicalOriginalEvidenceKind,
+  type PhysicalOriginalEvidenceReasonCode,
+  type RecognizedPhysicalOriginalEvidence,
+  type UnidentifiedPhysicalOriginalEvidence,
+} from './physical-original/recognize-physical-original-evidence.js'
+
+export {
+  determinePhysicalOriginalApplicability,
+  determinePhysicalOriginalStatus,
+  type PhysicalOriginalApplicability,
+  type PhysicalOriginalApplicabilityDecision,
+  type PhysicalOriginalApplicabilityFacts,
+  type PhysicalOriginalApplicabilityIssue,
+  type PhysicalOriginalApplicabilityReasonCode,
+  type PhysicalOriginalDecision,
+  type PhysicalOriginalDecisionEvidence,
+  type PhysicalOriginalFacts,
+  type PhysicalOriginalIssue,
+  type PhysicalOriginalReasonCode,
+  type PhysicalOriginalReceiptSource,
+  type PhysicalOriginalStatus,
+  type PhysicalOriginalTransportMode,
+} from './physical-original/determine-physical-original-status.js'

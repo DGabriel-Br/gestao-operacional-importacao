@@ -363,26 +363,60 @@ A busca é literal, sem fuzzy matching, sinônimos, remoção de artigos ou inte
 
 ## BL original físico
 
-Aplicável principalmente ao modal marítimo e usa `Datas Originais`, observações e desvios correspondentes.
+**Fonte da caracterização**: evidências, matriz, janela temporal e precedência da exceção descritas pelo Mestre na Etapa 13 em 2026-09-27 e reproduzidas em `packages/domain/src/physical-original/`.
 
-Situações relatadas:
+O original físico é uma dimensão independente do BL digitalizado, Mercante, etapa e alerta principal. A política recebe fatos de domínio já interpretados e não conhece cabeçalhos, registros eTrack ou linhas eComex.
 
-- `BL original físico recebido`;
-- `Aguardando BL original físico`;
-- `BL original físico pendente sem desvio`;
-- `BL original físico recebido, mas desvio continua aberto`.
+### Evidência física
 
-| ID                | Comportamento atual relatado                                                            | Estado e lacunas                                                          |
-| ----------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| RULE-PHYSICAL-001 | `Datas Originais`, observações e desvios participam da determinação da situação física. | Relatado. A precedência e os padrões exatos não foram fornecidos.         |
-| RULE-PHYSICAL-002 | Certos processos tratados como FEDEX podem receber comportamento especial.              | Relatado. A identificação e a exceção definitivas precisam ser validadas. |
+| Evidência estável | Fonte caracterizada                                                           |
+| ----------------- | ----------------------------------------------------------------------------- |
+| `RECEIVED`        | Presença válida de `Datas Originais`.                                         |
+| `RECEIVED`        | Observação contém literalmente `Originais OK` após a normalização da família. |
+| `UNIDENTIFIED`    | A observação não contém a evidência textual caracterizada.                    |
+
+| ID                | Comportamento ou limite                                                                        | Resultado                                                               | Estado e lacunas                                                                         |
+| ----------------- | ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| RULE-PHYSICAL-001 | Presença válida de `Datas Originais`.                                                          | Evidência de recebimento físico.                                        | Caracterizado, não aprovado. A fronteira futura fornece apenas `hasOriginalReceiptDate`. |
+| RULE-PHYSICAL-002 | A observação contém `Originais OK` após a normalização específica.                             | Evidência textual `RECEIVED`.                                           | Caracterizado, não aprovado.                                                             |
+| RULE-PHYSICAL-003 | A observação contém somente `Original digitalizado OK` ou outro texto não catalogado.          | Evidência física `UNIDENTIFIED`.                                        | Caracterizado, não aprovado. O status digital não é usado como proxy.                    |
+| RULE-PHYSICAL-004 | Modal `air` ou `maritime`, fora da heurística legado FEDEX.                                    | Dimensão aplicável.                                                     | Caracterizado, não aprovado.                                                             |
+| RULE-PHYSICAL-005 | Modal `other` ou `unknown`.                                                                    | Aplicabilidade indeterminada, status `UNIDENTIFIED` e issue específico. | Representação conservadora; o resultado legado continua aberto.                          |
+| RULE-PHYSICAL-006 | Modal `air`, House presente e Agente ausente.                                                  | `NOT_APPLICABLE` com `LEGACY_FEDEX_EXCEPTION_MATCHED`.                  | Caracterizado somente como heurística legado, não como identidade FEDEX.                 |
+| RULE-PHYSICAL-007 | A heurística de `RULE-PHYSICAL-006` coincide com Datas Originais ou `Originais OK`.            | A exceção legado prevalece e permanece `NOT_APPLICABLE`.                | Caracterizado, não aprovado.                                                             |
+| RULE-PHYSICAL-008 | Recebimento confirmado e ausência de desvio aberto relacionado.                                | `RECEIVED`.                                                             | Caracterizado, não aprovado.                                                             |
+| RULE-PHYSICAL-009 | Recebimento confirmado e presença de desvio aberto relacionado.                                | `RECEIVED_WITH_OPEN_DEVIATION` e issue.                                 | Caracterizado como inconsistência, não aprovado.                                         |
+| RULE-PHYSICAL-010 | Sem recebimento, ETA presente, `ETA - avaliação <= 7` e presença de desvio aberto relacionado. | `AWAITING`.                                                             | Caracterizado, não aprovado. Inclui qualquer diferença negativa.                         |
+| RULE-PHYSICAL-011 | Sem recebimento, a mesma condição de limite superior e ausência de desvio aberto relacionado.  | `PENDING_WITHOUT_OPEN_DEVIATION` e issue.                               | Caracterizado como inconsistência, não aprovado. Inclui qualquer diferença negativa.     |
+| RULE-PHYSICAL-012 | Recebimento confirmado com ETA ausente, vencida ou distante.                                   | O recebimento prevalece sobre a janela temporal.                        | Caracterizado, não aprovado.                                                             |
+| RULE-PHYSICAL-013 | Sem recebimento e ETA ausente ou com diferença superior a sete dias.                           | `UNIDENTIFIED` com razão e issue específicos.                           | Preservação explícita de incerteza, não resultado legado caracterizado.                  |
+| RULE-PHYSICAL-014 | `hasOpenPhysicalOriginalDeviation` é recebido pronto pela política.                            | A política não classifica, correlaciona, conta nem busca desvios.       | Limite arquitetural aprovado; produção do fato permanece aberta.                         |
+
+### Normalização textual caracterizada
+
+Na ordem aplicada, a observação e a chave `Originais OK`:
+
+1. são convertidas para minúsculas;
+2. têm espaço não separável convertido para espaço comum;
+3. têm caracteres de controle ASCII equivalentes a `CLEAN` removidos;
+4. aplicam somente os mapas `á à â ã ä -> a`, `é è ê ë -> e`, `í ì î ï -> i`, `ó ò ô õ ö -> o`, `ú ù û ü -> u` e `ç -> c`;
+5. substituem caracteres fora de `a-z`, `0-9` e espaço por espaço;
+6. colapsam espaços e aplicam `trim`.
+
+A busca é literal, sem fuzzy matching, sinônimos ou inferência a partir do status digital. Observação ausente, vazia, somente com espaços e preenchida sem a evidência possuem razões distintas.
+
+### Janela temporal
+
+A janela caracterizada usa dias corridos gregorianos e possui somente limite superior: ETA deve existir e `ETA - avaliação <= 7`. Não existe limite inferior. Portanto, ETA hoje, futura em até sete dias e qualquer ETA vencida, inclusive por mais de sete dias, satisfazem a condição. Esse comportamento legado está caracterizado, mas não aprovado como regra futura. A política reutiliza `CivilDate`, recebe `evaluationDate` explicitamente e não consulta relógio global, criticidade ou alerta operacional.
+
+Sem recebimento, os resultados da planilha para ETA ausente e diferença superior a sete dias ainda não foram fornecidos. O código usa `UNIDENTIFIED` e issues específicos para preservar a lacuna sem promover esse tratamento a comportamento legado caracterizado.
 
 ## Candidato FEDEX
 
-| ID             | Padrão observado                                  | Uso relatado                                                                                   | Estado                                               |
-| -------------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| RULE-FEDEX-001 | Modal aéreo, `House` preenchido e `Agente` vazio. | O padrão é tratado como FEDEX em alguns controles.                                             | A validar. Não é identificação definitiva.           |
-| RULE-FEDEX-002 | Determinados casos FEDEX no pós-registro.         | Podem ser considerados aptos ao faturamento sem a mesma regra de original aplicada aos demais. | A validar. As condições exatas não foram fornecidas. |
+| ID             | Padrão observado                                  | Uso relatado                                                                                   | Estado                                                                        |
+| -------------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| RULE-FEDEX-001 | Modal aéreo, `House` preenchido e `Agente` vazio. | No controle físico, produz exceção `NOT_APPLICABLE` antes das evidências de recebimento.       | Caracterizado somente como heurística legado. Não é identificação definitiva. |
+| RULE-FEDEX-002 | Determinados casos FEDEX no pós-registro.         | Podem ser considerados aptos ao faturamento sem a mesma regra de original aplicada aos demais. | A validar. As condições exatas não foram fornecidas.                          |
 
 ## Prontidão e conferência
 
