@@ -36,6 +36,7 @@ Inclui controllers NestJS e a aplicação Next.js. Traduz entradas e apresenta r
 ## Componentes atuais
 
 - `apps/api`: shell mínimo da aplicação NestJS.
+- `apps/api/src/application/operational-assessment`: projeção pura dos dados técnicos normalizados do eTrack em fatos operacionais específicos da fonte, sem executar políticas do Domain.
 - `apps/api/src/imports/etrack`: contrato lógico, validação e normalização técnica específicos do eTrack, ainda sem parser físico, endpoint, persistência ou caso de uso.
 - `apps/api/src/imports/ecomex`: contrato lógico, validação e normalização técnica específicos do eComex, ainda sem parser físico, endpoint, persistência ou caso de uso.
 - `apps/api/src/imports/shared`: representação e parsing técnico de datas ISO, compartilhados apenas porque possuem semântica idêntica nas duas fronteiras.
@@ -54,6 +55,20 @@ linha lógica eTrack
 ```
 
 Essa fronteira não interpreta observações, não classifica situações operacionais e não decide a aceitação total ou parcial de um lote. O formato físico da exportação permanece fora do contrato até que existam amostras confirmadas.
+
+### Projeção eTrack da Application
+
+```text
+registro normalizado eTrack
+  -> validação da capacidade de estabelecer fatos
+  -> ETrackOperationalFacts ou issues de projeção
+```
+
+A primeira fronteira da Application possui um contrato mínimo de entrada, estruturalmente compatível com o resultado normalizado do importador, sem depender do módulo de Infrastructure. Ela traduz apenas os campos necessários ao futuro `OperationalAssessment`, preserva `Numero do Processo`, `Referencia Cliente` e a observação, converte o vocabulário técnico conhecido de modal para `air` ou `maritime` e mantém modal ausente ou desconhecido como `unknown`. `Master`, data de faturamento e campos adicionais permanecem fora dessa projeção porque nenhuma política atual os consome.
+
+Valores temporais ausentes representam ausência confirmada. Valores válidos `date` e `date-time` fornecem os componentes de `CivilDate`; no caso de `date-time`, a projeção preserva a data civil escrita pela fonte sem converter offset ou timezone. Um valor temporal presente e tecnicamente inválido impede o resultado `ready` e produz issue específico, em vez de virar ausência ou `false`. Os resultados `ready` e `invalid` preservam origem, versão da fonte e número da linha; versão ou número de linha inválidos também impedem `ready`. Essa decisão é da fronteira Application e não caracteriza uma regra da planilha. A semântica definitiva dos timestamps reais da exportação permanece aberta.
+
+A projeção não reconhece eventos, documentos ou Mercante, não infere FEDEX, não correlaciona eTrack com eComex e não chama `assessOperationalProcess`. A futura composição deverá acrescentar data de avaliação e fatos de desvios antes de formar `OperationalAssessmentFacts`.
 
 ### Fronteira eComex atual
 

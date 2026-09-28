@@ -19,6 +19,7 @@ O repositório contém a fundação técnica, as duas primeiras fronteiras de in
 - reconhecimento textual e determinação explicável do original físico, incluindo a heurística legado de FEDEX e sua janela própria de ETA;
 - reconhecimento textual e determinação explicável da situação operacional do Mercante;
 - composição pura `OperationalAssessment`, que preserva as decisões completas sem criar status global, prioridade ou correlação entre fontes;
+- primeira fronteira da Application, que projeta uma linha eTrack tecnicamente normalizada em fatos operacionais confiáveis sem executar o assessment;
 - documentação de arquitetura e descoberta do domínio;
 - contrato lógico e normalização técnica de linhas do eTrack;
 - contrato lógico e normalização técnica de linhas do eComex;
@@ -26,13 +27,13 @@ O repositório contém a fundação técnica, as duas primeiras fronteiras de in
 - reconhecimento legado das evidências de transbordo e atracação, separado da decisão de elegibilidade;
 - typecheck e testes automatizados.
 
-Os formatos físicos das exportações eTrack e eComex ainda não foram definidos. A ingestão não lê CSV, XLSX ou sistemas externos, não correlaciona as fontes, não persiste dados e não executa regras operacionais. As regras do domínio ainda não estão conectadas a casos de uso. Banco de dados, autenticação e demais integrações ainda não foram implementados.
+Os formatos físicos das exportações eTrack e eComex ainda não foram definidos. A ingestão não lê CSV, XLSX ou sistemas externos, não correlaciona as fontes, não persiste dados e não executa regras operacionais. A projeção eTrack da Application também não executa o `OperationalAssessment`; ela termina nos fatos específicos da fonte. Casos de uso completos, banco de dados, autenticação e demais integrações ainda não foram implementados.
 
 ## Estrutura
 
 ```text
 apps/
-  api/                 API NestJS, composition root e integrações específicas
+  api/                 API NestJS, Application inicial e integrações específicas
   web/                 Aplicação Next.js
 packages/
   domain/              Regras de negócio puras
