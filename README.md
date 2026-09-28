@@ -19,7 +19,8 @@ O repositório contém a fundação técnica, as duas primeiras fronteiras de in
 - reconhecimento textual e determinação explicável do original físico, incluindo a heurística legado de FEDEX e sua janela própria de ETA;
 - reconhecimento textual e determinação explicável da situação operacional do Mercante;
 - composição pura `OperationalAssessment`, que preserva as decisões completas sem criar status global, prioridade ou correlação entre fontes;
-- primeira fronteira da Application, que projeta uma linha eTrack tecnicamente normalizada em fatos operacionais confiáveis sem executar o assessment;
+- fronteira da Application que projeta uma linha eTrack tecnicamente normalizada em fatos operacionais confiáveis sem executar o assessment;
+- fronteira da Application que projeta uma linha eComex tecnicamente normalizada em um desvio operacional individual, executando as políticas existentes de impacto e lifecycle sem correlacionar ou agregar registros;
 - documentação de arquitetura e descoberta do domínio;
 - contrato lógico e normalização técnica de linhas do eTrack;
 - contrato lógico e normalização técnica de linhas do eComex;
@@ -27,7 +28,7 @@ O repositório contém a fundação técnica, as duas primeiras fronteiras de in
 - reconhecimento legado das evidências de transbordo e atracação, separado da decisão de elegibilidade;
 - typecheck e testes automatizados.
 
-Os formatos físicos das exportações eTrack e eComex ainda não foram definidos. A ingestão não lê CSV, XLSX ou sistemas externos, não correlaciona as fontes, não persiste dados e não executa regras operacionais. A projeção eTrack da Application também não executa o `OperationalAssessment`; ela termina nos fatos específicos da fonte. Casos de uso completos, banco de dados, autenticação e demais integrações ainda não foram implementados.
+Os formatos físicos das exportações eTrack e eComex ainda não foram definidos. A ingestão não lê CSV, XLSX ou sistemas externos, não correlaciona as fontes, não persiste dados e não executa regras operacionais. A projeção eTrack termina nos fatos específicos da fonte. A projeção eComex termina em um desvio individual explicável e chama somente as políticas públicas de impacto e lifecycle do Domain. Nenhuma das projeções executa o `OperationalAssessment`. Casos de uso completos, agregação de desvios, banco de dados, autenticação e demais integrações ainda não foram implementados.
 
 ## Estrutura
 

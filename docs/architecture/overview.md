@@ -36,7 +36,7 @@ Inclui controllers NestJS e a aplicação Next.js. Traduz entradas e apresenta r
 ## Componentes atuais
 
 - `apps/api`: shell mínimo da aplicação NestJS.
-- `apps/api/src/application/operational-assessment`: projeção pura dos dados técnicos normalizados do eTrack em fatos operacionais específicos da fonte, sem executar políticas do Domain.
+- `apps/api/src/application/operational-assessment`: projeções puras dos dados técnicos normalizados do eTrack em fatos específicos da fonte e do eComex em desvios operacionais individuais. Somente a projeção eComex chama as políticas públicas de impacto e lifecycle do Domain; nenhuma executa o assessment completo.
 - `apps/api/src/imports/etrack`: contrato lógico, validação e normalização técnica específicos do eTrack, ainda sem parser físico, endpoint, persistência ou caso de uso.
 - `apps/api/src/imports/ecomex`: contrato lógico, validação e normalização técnica específicos do eComex, ainda sem parser físico, endpoint, persistência ou caso de uso.
 - `apps/api/src/imports/shared`: representação e parsing técnico de datas ISO, compartilhados apenas porque possuem semântica idêntica nas duas fronteiras.
@@ -81,6 +81,21 @@ linha lógica eComex
 
 Essa fronteira não classifica desvios, não interpreta `FIM` como estado de abertura, não correlaciona `EMBARQUE` com o eTrack e não decide a aceitação total ou parcial de um lote. O formato físico da exportação permanece fora do contrato até que existam amostras confirmadas.
 
+### Projeção eComex da Application
+
+```text
+registro normalizado eComex
+  -> validação da capacidade de estabelecer o desvio individual
+  -> políticas de impacto e lifecycle do Domain
+  -> EComexOperationalDeviation ou issues de projeção
+```
+
+A projeção possui contrato mínimo estruturalmente compatível com o resultado do importador e não depende de seus tipos concretos. `EMBARQUE` permanece como `ecomexShipmentReference`, sem redução para dígitos, correlação ou identidade definitiva. `DESCR_DESVIO` e `OBSERVACOES` atravessam a Application semanticamente intactos; o catálogo, o fallback `BLOCKING`, a distinção exata de `(INV)` e a regra contextual da fatura assinada continuam exclusivamente no Domain.
+
+`FIM` ausente fornece `hasEnd = false`; `date` ou `date-time` válidos fornecem `hasEnd = true`; valor inválido impede `ready`. A decisão `OPEN` ou `CLOSED` continua sendo produzida por `determineDeviationLifecycle`. `EMBARQUE` ou `DESCR_DESVIO` tecnicamente ausentes ou inválidos também impedem um desvio operacional confiável, enquanto uma descrição textual desconhecida permanece válida e segue o fallback caracterizado no Domain. Origem, versão e número da linha são preservados nos resultados.
+
+`INICIO`, `MODAL`, `JUSTIFICATIVA`, `APONTADO_POR`, `CONCLUIDO_POR`, `EXPORT_NOME` e `INVOICE` permanecem fora dessa projeção por não possuírem consumidor nas duas políticas atuais. Issues nesses campos não alteram o resultado individual desta fronteira. A projeção não correlaciona fontes, não agrupa ou conta desvios, não produz flags documentais e não executa `OperationalAssessment`.
+
 Os contratos e os importadores das duas fontes permanecem separados. A comparação da Etapa 5 extraiu somente a representação e o parsing técnico de datas ISO, sem nomes de campos, mensagens, issues ou conhecimento das fontes. Cabeçalhos, modais, textos, rastreabilidade, projeções normalizadas e produção de issues permanecem específicos. A taxonomia de issues não foi compartilhada porque ainda mistura localização e natureza do problema.
 
 ## Componentes futuros documentados
@@ -106,7 +121,7 @@ A criticidade recebe ETA civil válida ou ausência confirmada, presença de che
 
 O alerta operacional principal recebe etapa, contagens prontas de desvios abertos classificados, ETA civil, presença de chegada e data de avaliação. A política reproduz a primeira condição verdadeira da coluna legada e retorna somente um alerta. Ela compartilha apenas o conceito e a diferença de datas civis com a criticidade, sem consumir seu resultado, contar desvios, detalhar Mercante ou documentos, nem ordenar o dashboard.
 
-A classificação de um desvio individual recebe descrição e observação preservadas por uma futura camada de mapeamento. Sua normalização textual é específica dessa família, reproduz somente o catálogo e os contextos caracterizados e não depende do contrato eComex. Separadamente, o lifecycle recebe apenas presença ou ausência de encerramento já validada. Nenhuma dessas políticas correlaciona fontes, agrega desvios, conta ocorrências ou gera alertas.
+A classificação de um desvio individual recebe descrição e observação preservadas pela projeção eComex da Application. Sua normalização textual é específica dessa família, reproduz somente o catálogo e os contextos caracterizados e não depende do contrato eComex. Separadamente, o lifecycle recebe apenas presença ou ausência de encerramento já validada. Nenhuma dessas políticas correlaciona fontes, agrega desvios, conta ocorrências ou gera alertas.
 
 A dimensão do BL original digitalizado separa o reconhecimento textual da decisão. O reconhecedor compara somente três evidências caracterizadas e seleciona a última posição normalizada. A política recebe modal de domínio, evidência já reconhecida e o fato pronto de existência do desvio aberto relacionado. Ela não busca nem correlaciona desvios, não determina original físico ou Mercante e preserva divergências entre evidência e desvio como estados e issues explícitos.
 
