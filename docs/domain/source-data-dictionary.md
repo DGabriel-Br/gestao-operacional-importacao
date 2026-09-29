@@ -123,15 +123,26 @@ eTrack.Referencia Cliente <-> eComex.EMBARQUE
 
 Essa relação é uma observação da ferramenta atual. Ela não está aprovada como identidade canônica nem como chave persistente do novo sistema.
 
-Antes de modelar correlação ou persistência, devem ser validados:
+Na Etapa 18, a Application passou a reproduzir explicitamente a convenção legado observada:
+
+```text
+digitsOnly(eTrack.Referencia Cliente) == digitsOnly(eComex.EMBARQUE)
+```
+
+`digitsOnly` remove todos os caracteres que não sejam dígitos ASCII de `0` a `9`, preserva zeros à esquerda e compara o texto resultante por igualdade exata. Ausência ou resultado vazio torna a correlação indisponível; uma chave válida pode produzir zero, um ou vários matches. Linhas `CLOSED` permanecem rastreáveis, mas somente linhas `OPEN` entram nas contagens básicas por impacto. Duplicatas não são removidas, e referências brutas distintas que colapsam na mesma chave geram issue diagnóstica sem alterar os matches.
+
+Essa caracterização executável pertence à Application e reproduz o comportamento legado. Ela não aprova a convenção como identidade futura, não cria chave de persistência e não resolve cardinalidade, duplicidade, reabertura ou colisões entre vários processos eTrack.
+
+Antes de adotar uma correlação definitiva ou modelar persistência, devem ser validados:
 
 - unicidade dos dois campos;
 - cardinalidade entre processo, embarque, Invoice, House e Master;
 - variações de formatação;
 - registros ausentes ou duplicados;
+- colisões causadas pela remoção de caracteres não numéricos, inclusive entre múltiplos processos eTrack;
 - comportamento quando uma fonte diverge da outra.
 
-Consulte `Q-ID-001` e `Q-ID-002` em [questões abertas](open-questions.md).
+Consulte `Q-ID-001`, `Q-ID-002` e `Q-ID-005` em [questões abertas](open-questions.md).
 
 ## Normalização e interpretação
 

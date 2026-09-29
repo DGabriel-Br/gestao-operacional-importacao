@@ -36,7 +36,7 @@ Inclui controllers NestJS e a aplicação Next.js. Traduz entradas e apresenta r
 ## Componentes atuais
 
 - `apps/api`: shell mínimo da aplicação NestJS.
-- `apps/api/src/application/operational-assessment`: projeções puras dos dados técnicos normalizados do eTrack em fatos específicos da fonte e do eComex em desvios operacionais individuais. Somente a projeção eComex chama as políticas públicas de impacto e lifecycle do Domain; nenhuma executa o assessment completo.
+- `apps/api/src/application/operational-assessment`: projeções puras dos dados técnicos normalizados do eTrack e do eComex, seguidas pela correlação legado específica entre suas referências e pela agregação básica dos impactos `OPEN`. Somente a projeção eComex chama as políticas públicas de impacto e lifecycle do Domain; nenhuma função executa o assessment completo.
 - `apps/api/src/imports/etrack`: contrato lógico, validação e normalização técnica específicos do eTrack, ainda sem parser físico, endpoint, persistência ou caso de uso.
 - `apps/api/src/imports/ecomex`: contrato lógico, validação e normalização técnica específicos do eComex, ainda sem parser físico, endpoint, persistência ou caso de uso.
 - `apps/api/src/imports/shared`: representação e parsing técnico de datas ISO, compartilhados apenas porque possuem semântica idêntica nas duas fronteiras.
@@ -95,6 +95,21 @@ A projeção possui contrato mínimo estruturalmente compatível com o resultado
 `FIM` ausente fornece `hasEnd = false`; `date` ou `date-time` válidos fornecem `hasEnd = true`; valor inválido impede `ready`. A decisão `OPEN` ou `CLOSED` continua sendo produzida por `determineDeviationLifecycle`. `EMBARQUE` ou `DESCR_DESVIO` tecnicamente ausentes ou inválidos também impedem um desvio operacional confiável, enquanto uma descrição textual desconhecida permanece válida e segue o fallback caracterizado no Domain. Origem, versão e número da linha são preservados nos resultados.
 
 `INICIO`, `MODAL`, `JUSTIFICATIVA`, `APONTADO_POR`, `CONCLUIDO_POR`, `EXPORT_NOME` e `INVOICE` permanecem fora dessa projeção por não possuírem consumidor nas duas políticas atuais. Issues nesses campos não alteram o resultado individual desta fronteira. A projeção não correlaciona fontes, não agrupa ou conta desvios, não produz flags documentais e não executa `OperationalAssessment`.
+
+### Correlação legado e agregação básica na Application
+
+```text
+ETrackOperationalFacts + EComexOperationalDeviation[]
+  -> chave legado por remoção de caracteres que não sejam dígitos ASCII
+  -> igualdade textual exata entre chaves não vazias
+  -> matches rastreáveis + contagens dos impactos OPEN
+```
+
+A correlação usa exclusivamente `customerReference` e `ecomexShipmentReference`. Os valores originais permanecem no resultado; a chave derivada não é `processId`, identidade canônica nem chave de persistência. Ausência de `customerReference` ou texto sem dígitos produz `uncorrelatable`. Uma chave válida sem correspondências produz `correlated` com zero matches e contagens zero.
+
+A junção é um-para-muitos, preserva a ordem e os traces das linhas eComex e não remove duplicatas. Desvios `CLOSED` permanecem nos matches para auditoria, mas apenas `OPEN` participa das contagens `BLOCKING`, `NON_BLOCKING` e `unclassified`. A Application lê as decisões já projetadas e não reexecuta impacto ou lifecycle.
+
+Referências eComex brutas distintas que colapsam na mesma chave continuam correlacionadas conforme o legado e produzem `LEGACY_CORRELATION_REFERENCE_COLLISION`. Essa issue apenas expõe a perda de informação. Colisões entre múltiplos registros eTrack não são detectáveis por esta função, que recebe um único processo por execução. Flags específicas de original digital ou físico, `OperationalDeviationSummary` final e `OperationalAssessment` permanecem fora desta etapa.
 
 Os contratos e os importadores das duas fontes permanecem separados. A comparação da Etapa 5 extraiu somente a representação e o parsing técnico de datas ISO, sem nomes de campos, mensagens, issues ou conhecimento das fontes. Cabeçalhos, modais, textos, rastreabilidade, projeções normalizadas e produção de issues permanecem específicos. A taxonomia de issues não foi compartilhada porque ainda mistura localização e natureza do problema.
 
