@@ -22,6 +22,7 @@ O repositório contém a fundação técnica, as duas primeiras fronteiras de in
 - fronteira da Application que projeta uma linha eTrack tecnicamente normalizada em fatos operacionais confiáveis sem executar o assessment;
 - fronteira da Application que projeta uma linha eComex tecnicamente normalizada em um desvio operacional individual, executando as políticas existentes de impacto e lifecycle sem correlacionar ou agregar registros;
 - correlação legado na Application entre `Referencia Cliente` e `EMBARQUE` pela igualdade após remoção de caracteres não numéricos, preservando matches e contagens básicas de desvios abertos sem estabelecer identidade canônica;
+- composição do `OperationalDeviationSummary` a partir das contagens da correlação geral e das flags documentais caracterizadas, com subcorrelação legado que preserva `/`;
 - documentação de arquitetura e descoberta do domínio;
 - contrato lógico e normalização técnica de linhas do eTrack;
 - contrato lógico e normalização técnica de linhas do eComex;
@@ -29,7 +30,7 @@ O repositório contém a fundação técnica, as duas primeiras fronteiras de in
 - reconhecimento legado das evidências de transbordo e atracação, separado da decisão de elegibilidade;
 - typecheck e testes automatizados.
 
-Os formatos físicos das exportações eTrack e eComex ainda não foram definidos. A ingestão não lê CSV, XLSX ou sistemas externos, não persiste dados e não executa regras operacionais. A projeção eTrack termina nos fatos específicos da fonte. A projeção eComex termina em um desvio individual explicável e chama somente as políticas públicas de impacto e lifecycle do Domain. A Application já reproduz a primeira correlação legado e produz contagens básicas por impacto dos desvios `OPEN`, sem deduplicação, identidade canônica ou flags específicas de documentos. Nenhuma dessas funções executa o `OperationalAssessment`. Casos de uso completos, banco de dados, autenticação e demais integrações ainda não foram implementados.
+Os formatos físicos das exportações eTrack e eComex ainda não foram definidos. A ingestão não lê CSV, XLSX ou sistemas externos, não persiste dados e não executa regras operacionais. A projeção eTrack termina nos fatos específicos da fonte. A projeção eComex termina em um desvio individual explicável e chama somente as políticas públicas de impacto e lifecycle do Domain. A Application reproduz a correlação geral legado por dígitos para preservar matches e contagens básicas dos desvios `OPEN`. Sobre esses matches, a composição documental aplica a chave específica que preserva `/` e os padrões textuais caracterizados para produzir as flags digital e física. Nenhuma dessas funções executa o `OperationalAssessment`. Casos de uso completos, banco de dados, autenticação e demais integrações ainda não foram implementados.
 
 ## Estrutura
 

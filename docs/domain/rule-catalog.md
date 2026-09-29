@@ -331,20 +331,20 @@ Para cada chave, o reconhecimento usa a última ocorrência no texto normalizado
 
 ### Matriz caracterizada
 
-| ID            | Condição caracterizada                                                                                                    | Resultado                           | Estado e limites                                                                           |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------ |
-| RULE-MERC-001 | Modal `air` ou `other`.                                                                                                   | `NOT_APPLICABLE`.                   | Caracterizado, não aprovado.                                                               |
-| RULE-MERC-002 | Modal `unknown`.                                                                                                          | `UNIDENTIFIED` e issue explícita.   | Aplicabilidade indeterminada, sem presumir modal marítimo.                                 |
-| RULE-MERC-003 | A última evidência definitiva é `Pendência no Mercante`.                                                                  | `PENDING`.                          | Caracterizado, não aprovado. Precede ETA e BL digitalizado.                                |
-| RULE-MERC-004 | A última evidência definitiva é `Mercante conferido com BL`.                                                              | `CHECKED`.                          | Caracterizado, não aprovado. Precede ETA e BL digitalizado.                                |
-| RULE-MERC-005 | Referência CE presente ou evidência textual `PENDING`, `CHECKED` ou `EXISTS`.                                             | Mercante existente.                 | Existência não significa conferência.                                                      |
-| RULE-MERC-006 | Mercante não existente, ETA presente e `ETA - avaliação <= 7`.                                                            | `MISSING_WITHIN_SEVEN_DAYS`.        | Caracterizado, não aprovado. Possui somente limite superior e inclui qualquer ETA vencida. |
-| RULE-MERC-007 | Mercante não existente, ETA ausente ou `ETA - avaliação > 7`.                                                             | `AWAITING_OPENING`.                 | Caracterizado, não aprovado.                                                               |
-| RULE-MERC-008 | Mercante existente, sem pendência ou conferência dominante, BL digitalizado `RECEIVED` ou `RECEIVED_WITH_OPEN_DEVIATION`. | `READY_TO_CHECK`.                   | O desvio aberto não apaga a evidência positiva de disponibilidade.                         |
-| RULE-MERC-009 | Mesmo contexto com BL digitalizado `AWAITING` ou `PENDING_WITHOUT_OPEN_DEVIATION`.                                        | `AWAITING_DIGITAL_ORIGINAL`.        | A ausência do desvio não transforma evidência de pendência em disponibilidade.             |
-| RULE-MERC-010 | Mesmo contexto com BL digitalizado `UNIDENTIFIED`.                                                                        | `VERIFY` e issue explícita.         | A incerteza documental permanece visível.                                                  |
-| RULE-MERC-011 | Processo marítimo existente com BL digitalizado `NOT_APPLICABLE`.                                                         | `VERIFY` e issue de inconsistência. | A combinação não é convertida silenciosamente em disponível ou pendente.                   |
-| RULE-MERC-012 | Uma pendência textual de Mercante existe.                                                                                 | Não consulta desvios gerais.        | Pendência de Mercante não equivale automaticamente a desvio impeditivo eComex.             |
+| ID            | Condição caracterizada                                                                                                    | Resultado                           | Estado e limites                                                               |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- | ------------------------------------------------------------------------------ |
+| RULE-MERC-001 | Modal `air` ou `other`.                                                                                                   | `NOT_APPLICABLE`.                   | Caracterizado, não aprovado.                                                   |
+| RULE-MERC-002 | Modal `unknown`.                                                                                                          | `UNIDENTIFIED` e issue explícita.   | Aplicabilidade indeterminada, sem presumir modal marítimo.                     |
+| RULE-MERC-003 | A última evidência definitiva é `Pendência no Mercante`.                                                                  | `PENDING`.                          | Caracterizado, não aprovado. Precede ETA e BL digitalizado.                    |
+| RULE-MERC-004 | A última evidência definitiva é `Mercante conferido com BL`.                                                              | `CHECKED`.                          | Caracterizado, não aprovado. Precede ETA e BL digitalizado.                    |
+| RULE-MERC-005 | Referência CE presente ou evidência textual `PENDING`, `CHECKED` ou `EXISTS`.                                             | Mercante existente.                 | Existência não significa conferência.                                          |
+| RULE-MERC-006 | Mercante não existente, ETA presente e `0 <= ETA - avaliação <= 7`.                                                       | `MISSING_WITHIN_SEVEN_DAYS`.        | Caracterizado, não aprovado. ETA hoje e futura em até sete dias.               |
+| RULE-MERC-007 | Mercante não existente, ETA ausente, vencida ou com `ETA - avaliação > 7`.                                                | `AWAITING_OPENING`.                 | Caracterizado, não aprovado.                                                   |
+| RULE-MERC-008 | Mercante existente, sem pendência ou conferência dominante, BL digitalizado `RECEIVED` ou `RECEIVED_WITH_OPEN_DEVIATION`. | `READY_TO_CHECK`.                   | O desvio aberto não apaga a evidência positiva de disponibilidade.             |
+| RULE-MERC-009 | Mesmo contexto com BL digitalizado `AWAITING` ou `PENDING_WITHOUT_OPEN_DEVIATION`.                                        | `AWAITING_DIGITAL_ORIGINAL`.        | A ausência do desvio não transforma evidência de pendência em disponibilidade. |
+| RULE-MERC-010 | Mesmo contexto com BL digitalizado `UNIDENTIFIED`.                                                                        | `VERIFY` e issue explícita.         | A incerteza documental permanece visível.                                      |
+| RULE-MERC-011 | Processo marítimo existente com BL digitalizado `NOT_APPLICABLE`.                                                         | `VERIFY` e issue de inconsistência. | A combinação não é convertida silenciosamente em disponível ou pendente.       |
+| RULE-MERC-012 | Uma pendência textual de Mercante existe.                                                                                 | Não consulta desvios gerais.        | Pendência de Mercante não equivale automaticamente a desvio impeditivo eComex. |
 
 ### Normalização caracterizada
 
@@ -365,10 +365,12 @@ A busca é literal, sem fuzzy matching, sinônimos, remoção de artigos ou reut
 2. Evidência dominante `PENDING` produz `PENDING`.
 3. Evidência dominante `CHECKED` produz `CHECKED`.
 4. Sem evidência definitiva, a política determina existência pela referência CE ou por evidência textual.
-5. Sem existência, aplica a janela de ETA com somente limite superior.
+5. Sem existência, aplica a janela de ETA inclusiva entre zero e sete dias.
 6. Com existência, projeta somente a disponibilidade do BL digitalizado.
 
 `RULE-STAGE-002` continua caracterizando separadamente que a presença da referência Mercante produz a etapa legada `READY_FOR_REVIEW`. Isso não afirma que o Mercante esteja aberto ou conferido. O original físico e a heurística FEDEX não participam da decisão do Mercante.
+
+A janela do Mercante é diferente da janela do original físico. Mercante exige `0 <= ETA - avaliação <= 7` e exclui ETA vencida. Original físico mantém somente o limite superior `ETA - avaliação <= 7`, portanto inclui diferenças negativas.
 
 ## BL original digitalizado
 

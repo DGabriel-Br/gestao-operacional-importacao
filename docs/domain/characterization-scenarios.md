@@ -765,12 +765,12 @@ A existência resulta de referência CE presente ou de uma evidência textual re
 | `SCN-188` | `0`, ETA hoje.                          | `MISSING_WITHIN_SEVEN_DAYS`. |
 | `SCN-189` | `7`.                                    | `MISSING_WITHIN_SEVEN_DAYS`. |
 | `SCN-190` | `8`.                                    | `AWAITING_OPENING`.          |
-| `SCN-191` | `-1`, ETA ontem.                        | `MISSING_WITHIN_SEVEN_DAYS`. |
-| `SCN-192` | `-20`, ETA vinte dias vencida.          | `MISSING_WITHIN_SEVEN_DAYS`. |
+| `SCN-191` | `-1`, ETA ontem.                        | `AWAITING_OPENING`.          |
+| `SCN-192` | `-20`, ETA vinte dias vencida.          | `AWAITING_OPENING`.          |
 | `SCN-193` | ETA ausente.                            | `AWAITING_OPENING`.          |
 | `SCN-194` | Diferença `7` atravessando mês ou ano.  | `MISSING_WITHIN_SEVEN_DAYS`. |
 
-A janela usa diferença assinada e somente limite superior. Não consulta criticidade, original físico ou relógio global.
+A janela usa diferença assinada e exige o intervalo inclusivo de zero a sete dias. ETA vencida não entra nessa janela. A política não consulta criticidade, original físico ou relógio global. A regra do original físico permanece diferente: ela possui somente limite superior e inclui ETA vencida.
 
 ### Projeção do BL digitalizado e precedência final
 
@@ -808,13 +808,28 @@ Os cenários desta seção verificam uma decisão arquitetural do novo sistema. 
 | `SCN-208` | Aéreo, House presente e Agente ausente.                                                             | Original físico `NOT_APPLICABLE` pela heurística legado, Mercante e original digital `NOT_APPLICABLE`; etapa e alerta continuam independentes.                        |
 | `SCN-209` | Modal `unknown`.                                                                                    | As incertezas de original digital, original físico e Mercante permanecem em suas próprias decisões; não existe estado desconhecido global nem array global de issues. |
 | `SCN-210` | Observação sem evento reconhecido.                                                                  | Evento `UNIDENTIFIED`, etapa `REVIEW_OBSERVATION` e alerta `UNIDENTIFIED_EVENT`, sem replicar seus algoritmos na composição.                                          |
-| `SCN-211` | ETA vinte dias vencida, sem chegada, Mercante ausente e desvio físico aberto.                       | Coexistem criticidade `3`, alerta `ETA_OVERDUE_WITHOUT_ARRIVAL`, original físico `AWAITING` e Mercante `MISSING_WITHIN_SEVEN_DAYS`.                                   |
+| `SCN-211` | ETA vinte dias vencida, sem chegada, Mercante ausente e desvio físico aberto.                       | Coexistem criticidade `3`, alerta `ETA_OVERDUE_WITHOUT_ARRIVAL`, original físico `AWAITING` e Mercante `AWAITING_OPENING`.                                            |
 | `SCN-212` | `TYPING_COMPLETED`, referência Mercante ausente, `Mercante aberto` e BL digital recebido.           | Coexistem etapa `AWAITING_MERCANTE` e Mercante `READY_TO_CHECK`; nenhuma decisão corrige a outra.                                                                     |
 | `SCN-213` | `TYPING_COMPLETED`, referência Mercante presente e BL digital pendente.                             | Coexistem etapa `READY_FOR_REVIEW` e Mercante `AWAITING_DIGITAL_ORIGINAL`; a divergência permanece visível.                                                           |
 | `SCN-214` | Processo registrado, portanto inelegível, com fatos suficientes para as demais políticas.           | Elegibilidade `ineligible` não interrompe evento, etapa, criticidade, alerta, documentos ou Mercante.                                                                 |
 | `SCN-215` | Modal desconhecido, evidência de atracação, sem ETA, e evento `TYPING_COMPLETED`.                   | Elegibilidade `undetermined` não interrompe as demais dimensões; cada resultado preserva seu próprio desconhecimento ou ausência.                                     |
 
 `SCN-207` não resolve `Q-ALERT-005`: desvios não classificados não entram silenciosamente em nenhuma contagem classificada. `SCN-212` e `SCN-213` são testes deliberados de tensão entre dimensões. A composição não decide qual saída é mais correta e não produz inconsistência cruzada global.
+
+## Composição documental da Application
+
+As fórmulas verificadas nesta correção caracterizam uma subcorrelação aplicada somente aos matches gerais da Etapa 18. Ela preserva `/`, diferentemente da correlação geral usada nas contagens.
+
+| Cenário   | Fatos relevantes                                                                                                   | Resultado caracterizado                                                                                   |
+| --------- | ------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
+| `SCN-216` | `customerReference = 001/2026`; matches `ABC001/2026` e `001-2026`.                                                | Ambos contam pela chave geral `0012026`; somente `ABC001/2026` coincide pela chave documental `001/2026`. |
+| `SCN-217` | Desvio documental `OPEN`; observação satisfaz o padrão digital com termo antes de `digitaliz` ou na ordem inversa. | `hasOpenDigitalOriginalDeviation = true`.                                                                 |
+| `SCN-218` | Desvio documental `OPEN`; observação satisfaz `(conhecimento\|bl\|awb\|hawb).*(original\|orignal).*f[ií]sico`.     | `hasOpenPhysicalOriginalDeviation = true`.                                                                |
+| `SCN-219` | Mesmas descrições e observações documentais, porém lifecycle `CLOSED`.                                             | Nenhuma flag é ativada.                                                                                   |
+| `SCN-220` | Correlação geral válida sem matches.                                                                               | Summary com as três contagens zero e ambas as flags falsas.                                               |
+| `SCN-221` | Correlação `uncorrelatable`.                                                                                       | Nenhum `OperationalDeviationSummary` é produzido.                                                         |
+
+Ambos os padrões exigem descrição compatível com `documentos originais n[aã]o recebidos do agente de carga`, sem diferenciar caixa. O padrão digital preserva o typo legado `orignal`; o físico também o aceita. As observações recebem somente `LOWER` antes dos regexes. As três contagens continuam vindo diretamente da agregação geral da Etapa 18.
 
 ## Matriz mínima de cobertura
 

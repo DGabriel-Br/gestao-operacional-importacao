@@ -73,19 +73,19 @@ Essas garantias têm estado `Implementado` e `Verificado` apenas para o contrato
 
 ## eComex
 
-| ID             | Campo externo   | Significado ou uso observado                                                                   | Ainda não determinado                                                                                                    |
-| -------------- | --------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| SRC-ECOMEX-001 | `EMBARQUE`      | Principal referência atualmente usada para relacionar desvios ao embarque do eTrack.           | Se é chave definitiva, única ou suficiente.                                                                              |
-| SRC-ECOMEX-002 | `MODAL`         | Modal informado no contexto do desvio.                                                         | Vocabulário possível e precedência em divergência com `Via Transporte`.                                                  |
-| SRC-ECOMEX-003 | `DESCR_DESVIO`  | Descrição do desvio. Participa da classificação de impacto, mas pode ser insuficiente sozinha. | A normalização de impacto foi caracterizada na Etapa 10; catálogo completo e estabilidade dos textos permanecem abertos. |
-| SRC-ECOMEX-004 | `INICIO`        | Início do desvio.                                                                              | Formato, fuso e participação em ordenação ou duplicidade.                                                                |
-| SRC-ECOMEX-005 | `FIM`           | No comportamento atual, sua ausência indica desvio aberto.                                     | Semântica de valores inválidos, reabertura e divergência com conclusão.                                                  |
-| SRC-ECOMEX-006 | `OBSERVACOES`   | Contexto textual do desvio. Pode alterar a classificação operacional de certas descrições.     | Seis padrões e sua precedência foram caracterizados na Etapa 10; outros conteúdos permanecem abertos.                    |
-| SRC-ECOMEX-007 | `JUSTIFICATIVA` | Justificativa registrada para o desvio.                                                        | Uso atual no processamento e obrigatoriedade.                                                                            |
-| SRC-ECOMEX-008 | `APONTADO_POR`  | Responsável pelo apontamento.                                                                  | Uso atual no domínio e formato de identificação.                                                                         |
-| SRC-ECOMEX-009 | `CONCLUIDO_POR` | Responsável informado na conclusão.                                                            | Relação com `FIM` e tratamento de combinações inconsistentes.                                                            |
-| SRC-ECOMEX-010 | `EXPORT_NOME`   | Campo de origem relacionado à exportação.                                                      | Significado operacional e participação em identidade ou correlação.                                                      |
-| SRC-ECOMEX-011 | `INVOICE`       | Referência de fatura associada ao desvio.                                                      | Cardinalidade, formato e relação com processo e embarque.                                                                |
+| ID             | Campo externo   | Significado ou uso observado                                                                                   | Ainda não determinado                                                                                                    |
+| -------------- | --------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| SRC-ECOMEX-001 | `EMBARQUE`      | Principal referência atualmente usada para relacionar desvios ao embarque do eTrack.                           | Se é chave definitiva, única ou suficiente.                                                                              |
+| SRC-ECOMEX-002 | `MODAL`         | Modal informado no contexto do desvio.                                                                         | Vocabulário possível e precedência em divergência com `Via Transporte`.                                                  |
+| SRC-ECOMEX-003 | `DESCR_DESVIO`  | Descrição do desvio. Participa da classificação de impacto, mas pode ser insuficiente sozinha.                 | A normalização de impacto foi caracterizada na Etapa 10; catálogo completo e estabilidade dos textos permanecem abertos. |
+| SRC-ECOMEX-004 | `INICIO`        | Início do desvio.                                                                                              | Formato, fuso e participação em ordenação ou duplicidade.                                                                |
+| SRC-ECOMEX-005 | `FIM`           | No comportamento atual, sua ausência indica desvio aberto.                                                     | Semântica de valores inválidos, reabertura e divergência com conclusão.                                                  |
+| SRC-ECOMEX-006 | `OBSERVACOES`   | Contexto textual do desvio. Pode alterar a classificação operacional e participar da identificação documental. | Seis padrões de impacto foram caracterizados na Etapa 10; os padrões documentais digital e físico permanecem abertos.    |
+| SRC-ECOMEX-007 | `JUSTIFICATIVA` | Justificativa registrada para o desvio.                                                                        | Uso atual no processamento e obrigatoriedade.                                                                            |
+| SRC-ECOMEX-008 | `APONTADO_POR`  | Responsável pelo apontamento.                                                                                  | Uso atual no domínio e formato de identificação.                                                                         |
+| SRC-ECOMEX-009 | `CONCLUIDO_POR` | Responsável informado na conclusão.                                                                            | Relação com `FIM` e tratamento de combinações inconsistentes.                                                            |
+| SRC-ECOMEX-010 | `EXPORT_NOME`   | Campo de origem relacionado à exportação.                                                                      | Significado operacional e participação em identidade ou correlação.                                                      |
+| SRC-ECOMEX-011 | `INVOICE`       | Referência de fatura associada ao desvio.                                                                      | Cardinalidade, formato e relação com processo e embarque.                                                                |
 
 ### Contrato técnico executável da Etapa 4
 
@@ -132,6 +132,18 @@ digitsOnly(eTrack.Referencia Cliente) == digitsOnly(eComex.EMBARQUE)
 `digitsOnly` remove todos os caracteres que não sejam dígitos ASCII de `0` a `9`, preserva zeros à esquerda e compara o texto resultante por igualdade exata. Ausência ou resultado vazio torna a correlação indisponível; uma chave válida pode produzir zero, um ou vários matches. Linhas `CLOSED` permanecem rastreáveis, mas somente linhas `OPEN` entram nas contagens básicas por impacto. Duplicatas não são removidas, e referências brutas distintas que colapsam na mesma chave geram issue diagnóstica sem alterar os matches.
 
 Essa caracterização executável pertence à Application e reproduz o comportamento legado. Ela não aprova a convenção como identidade futura, não cria chave de persistência e não resolve cardinalidade, duplicidade, reabertura ou colisões entre vários processos eTrack.
+
+As fórmulas das flags documentais aplicam, somente dentro dos matches gerais, uma segunda chave legado:
+
+```text
+keepAsciiDigitsAndSlash(eTrack.Referencia Cliente)
+==
+keepAsciiDigitsAndSlash(eComex.EMBARQUE)
+```
+
+Essa normalização remove tudo que não seja dígito ASCII ou `/`. Ela não substitui a correlação geral e não altera suas contagens. Por isso, `001/2026` e `001-2026` coincidem na correlação geral por `0012026`, mas divergem nas chaves documentais `001/2026` e `0012026`. Esse comportamento é caracterizado como convenção legado, não como identidade canônica.
+
+Sobre o subconjunto documental, somente desvios `OPEN` com descrição compatível com `documentos originais n[aã]o recebidos do agente de carga` são avaliados. `OBSERVACOES` vem do eComex e recebe apenas `LOWER`. O padrão digital é `(original|orignal|originais|bl|conhecimento).*(digitaliz)|digitaliz.*(original|orignal|originais|bl|conhecimento)`. O padrão físico é `(conhecimento|bl|awb|hawb).*(original|orignal).*f[ií]sico`. O typo `orignal` é parte da fórmula atual.
 
 Antes de adotar uma correlação definitiva ou modelar persistência, devem ser validados:
 

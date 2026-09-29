@@ -239,8 +239,6 @@ describe('missing Mercante signed ETA window', () => {
   it.each([
     ['ETA today', evaluationDate, 0],
     ['ETA in seven days', civilDate(2026, 10, 4), 7],
-    ['ETA yesterday', civilDate(2026, 9, 26), -1],
-    ['ETA twenty days overdue', civilDate(2026, 9, 7), -20],
   ] as const)(
     'reports missing within seven days for %s',
     (_description, estimatedArrivalDate, expectedDifference) => {
@@ -260,15 +258,24 @@ describe('missing Mercante signed ETA window', () => {
     },
   )
 
-  it('awaits opening when ETA is eight days away', () => {
-    const input = facts({
-      hasMercanteReference: false,
-      estimatedArrivalDate: civilDate(2026, 10, 5),
-    })
+  it.each([
+    ['ETA twenty days overdue', civilDate(2026, 9, 7), -20],
+    ['ETA yesterday', civilDate(2026, 9, 26), -1],
+    ['ETA in eight days', civilDate(2026, 10, 5), 8],
+  ] as const)(
+    'awaits opening for %s',
+    (_description, estimatedArrivalDate, expectedDifference) => {
+      const input = facts({
+        hasMercanteReference: false,
+        estimatedArrivalDate,
+      })
 
-    expectStatus(input, 'AWAITING_OPENING', 'MERCANTE_AWAITING_OPENING')
-    expect(determineMercanteStatus(input).evidence.etaDayDifference).toBe(8)
-  })
+      expectStatus(input, 'AWAITING_OPENING', 'MERCANTE_AWAITING_OPENING')
+      expect(determineMercanteStatus(input).evidence.etaDayDifference).toBe(
+        expectedDifference,
+      )
+    },
+  )
 
   it('awaits opening when ETA is absent', () => {
     const input = facts({

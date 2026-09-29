@@ -143,7 +143,7 @@ describe('operational process assessment composition', () => {
     expect(assessment.criticality.criticality).toBe(3)
     expect(assessment.alert.alert).toBe('ETA_OVERDUE_WITHOUT_ARRIVAL')
     expect(assessment.physicalOriginal.status).toBe('AWAITING')
-    expect(assessment.mercante.status).toBe('MISSING_WITHIN_SEVEN_DAYS')
+    expect(assessment.mercante.status).toBe('AWAITING_OPENING')
   })
 
   it('keeps awaiting Mercante stage while textual existence makes Mercante ready to check', () => {

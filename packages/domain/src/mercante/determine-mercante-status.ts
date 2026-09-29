@@ -195,7 +195,7 @@ function determineMissingMercanteStatus(
     facts.evaluationDate,
   )
 
-  return etaDayDifference <= 7
+  return etaDayDifference >= 0 && etaDayDifference <= 7
     ? decision(
         'MISSING_WITHIN_SEVEN_DAYS',
         'MERCANTE_MISSING_WITHIN_SEVEN_DAYS',

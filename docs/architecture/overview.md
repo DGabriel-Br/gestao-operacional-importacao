@@ -109,7 +109,26 @@ A correlação usa exclusivamente `customerReference` e `ecomexShipmentReference
 
 A junção é um-para-muitos, preserva a ordem e os traces das linhas eComex e não remove duplicatas. Desvios `CLOSED` permanecem nos matches para auditoria, mas apenas `OPEN` participa das contagens `BLOCKING`, `NON_BLOCKING` e `unclassified`. A Application lê as decisões já projetadas e não reexecuta impacto ou lifecycle.
 
-Referências eComex brutas distintas que colapsam na mesma chave continuam correlacionadas conforme o legado e produzem `LEGACY_CORRELATION_REFERENCE_COLLISION`. Essa issue apenas expõe a perda de informação. Colisões entre múltiplos registros eTrack não são detectáveis por esta função, que recebe um único processo por execução. Flags específicas de original digital ou físico, `OperationalDeviationSummary` final e `OperationalAssessment` permanecem fora desta etapa.
+Referências eComex brutas distintas que colapsam na mesma chave continuam correlacionadas conforme o legado e produzem `LEGACY_CORRELATION_REFERENCE_COLLISION`. Essa issue apenas expõe a perda de informação. Colisões entre múltiplos registros eTrack não são detectáveis por esta função, que recebe um único processo por execução. A correlação geral não produz flags documentais nem executa `OperationalAssessment`.
+
+### Composição do resumo de desvios
+
+```text
+OperationalDeviationCorrelationResult
+  -> preserva uncorrelatable sem fabricar ausências
+  -> reutiliza as contagens OPEN existentes
+  -> filtra os matches pela chave documental que preserva barra
+  -> reconhece independentemente os desvios digital e físico
+  -> produz OperationalDeviationSummary
+```
+
+A composição recebe o resultado da correlação, não registros globais nem as fontes originais. `uncorrelatable` permanece sem summary. Um resultado `correlated` sem correspondências produz legitimamente contagens zero e flags falsas. As três contagens do summary são copiadas da agregação da correlação, sem reclassificar impacto ou reexecutar lifecycle.
+
+As fórmulas documentais usam uma segunda normalização de referência: removem tudo exceto dígitos ASCII e `/`. Essa chave é aplicada somente aos `matchedDeviations` da correlação geral. Assim, as contagens continuam baseadas na igualdade por dígitos, enquanto as flags usam o subconjunto cuja barra também coincide. Os valores brutos não são substituídos, zeros à esquerda são preservados e a subcorrelação não estabelece identidade canônica.
+
+Somente desvios `OPEN` cuja descrição corresponda, sem diferenciar caixa, a `documentos originais n[aã]o recebidos do agente de carga` podem ativar flags. A flag digital exige o regex legado `(original|orignal|originais|bl|conhecimento).*(digitaliz)|digitaliz.*(original|orignal|originais|bl|conhecimento)` sobre `OBSERVACOES` em minúsculas. A flag física exige `(conhecimento|bl|awb|hawb).*(original|orignal).*f[ií]sico`. O typo `orignal` é preservado porque existe na fórmula. Não há fuzzy matching nem normalização textual adicional.
+
+Issues de colisão, duplicatas, ordem e traces continuam preservadas no resultado original da correlação. A subcorrelação documental não elimina matches nem altera as contagens, e a composição não executa `OperationalAssessment`.
 
 Os contratos e os importadores das duas fontes permanecem separados. A comparação da Etapa 5 extraiu somente a representação e o parsing técnico de datas ISO, sem nomes de campos, mensagens, issues ou conhecimento das fontes. Cabeçalhos, modais, textos, rastreabilidade, projeções normalizadas e produção de issues permanecem específicos. A taxonomia de issues não foi compartilhada porque ainda mistura localização e natureza do problema.
 
