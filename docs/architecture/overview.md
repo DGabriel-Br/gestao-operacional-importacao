@@ -121,7 +121,7 @@ A correlação usa exclusivamente `customerReference` e `ecomexShipmentReference
 
 A junção é um-para-muitos, preserva a ordem e os traces das linhas eComex e não remove duplicatas. Desvios `CLOSED` permanecem nos matches para auditoria, mas apenas `OPEN` participa das contagens `BLOCKING`, `NON_BLOCKING` e `unclassified`. A Application lê as decisões já projetadas e não reexecuta impacto ou lifecycle.
 
-Referências eComex brutas distintas que colapsam na mesma chave continuam correlacionadas conforme o legado e produzem `LEGACY_CORRELATION_REFERENCE_COLLISION`. Essa issue apenas expõe a perda de informação. Colisões entre múltiplos registros eTrack não são detectáveis por esta função, que recebe um único processo por execução. A correlação geral não produz flags documentais nem executa `OperationalAssessment`.
+Referências eComex brutas distintas que colapsam na mesma chave continuam correlacionadas conforme o legado e produzem `LEGACY_CORRELATION_REFERENCE_COLLISION`. Essa issue apenas expõe a perda de informação. A função individual não detecta colisões entre múltiplos registros eTrack porque recebe um único processo por execução; o caso de uso em lote descrito adiante acrescenta esse diagnóstico transversal sem mudar o resultado individual. A correlação geral não produz flags documentais nem executa `OperationalAssessment`.
 
 ### Composição do resumo de desvios
 
@@ -159,6 +159,22 @@ A função pura da Application recebe somente fatos eTrack já projetados, uma c
 Uma correlação `uncorrelatable` produz `unassessable`, preservando os fatos eTrack, a data de avaliação, o motivo e as issues originais, sem fabricar summary. Uma correlação `correlated`, inclusive com zero matches, produz `assessed`. Issues diagnósticas como colisão permanecem na projeção da correlação e não bloqueiam a avaliação.
 
 O resultado interno preserva `ETrackOperationalFacts`, `evaluationDate`, a projeção do summary, os `OperationalAssessmentFacts` enviados e o assessment completo. Assim, `processNumber` e `customerReference` continuam disponíveis como contexto da Application sem entrar nas regras do Domain. Elegibilidade `ineligible` ou `undetermined` não impede o assessment, e tensões entre etapa, Mercante, documentos, criticidade e alerta não são reconciliadas.
+
+### Avaliação operacional em lote na Application
+
+```text
+ETrackOperationalFacts[]
++ EComexOperationalDeviation[]
++ evaluationDate explícita
+  -> correlação e assessment individual para cada entrada eTrack
+  -> entries na ordem original + diagnósticos transversais
+```
+
+`assessOperationalBatch` é uma função pura que chama, para cada processo, `correlateOperationalDeviations` e `assessCorrelatedOperationalProcess`. O resultado integral `assessed` ou `unassessable` permanece na posição original; uma correlação individual impossível não interrompe os demais processos. A coleção eComex é reutilizada sem índice alternativo, pré-agrupamento ou nova implementação de matching. Não existe ordenação por criticidade, alerta, ETA ou identificador.
+
+O lote reutiliza `createLegacyCorrelationKey` para detectar quando referências eTrack brutas distintas produzem a mesma chave geral por dígitos. Cada chave colidente gera um único `LEGACY_ETRACK_CORRELATION_KEY_COLLISION`, com as referências distintas na ordem de primeira ocorrência e contexto mínimo de índice e processo. Referências ausentes, sem dígitos ou literalmente repetidas não geram esse diagnóstico. A colisão não escolhe vencedor, não divide desvios e não bloqueia assessment: conforme o comportamento legado preservado, dois processos colidentes podem receber o mesmo desvio eComex. Issues individuais de colisão entre referências eComex continuam separadas nos respectivos resultados.
+
+O lote não conhece a chave documental que preserva `/`, não executa políticas do Domain diretamente, não produz status global, score, prioridade, persistência ou IO. `processNumber` permanece somente como contexto e não participa da correlação nem da detecção da chave.
 
 ### Validação diferencial histórica
 
