@@ -40,7 +40,7 @@ type DifferentialDimension = (typeof DIFFERENTIAL_DIMENSIONS)[number]
 type DifferentialOutcome = 'MATCH' | 'MISMATCH' | 'NOT_COMPARABLE'
 type MismatchCategory =
   | 'DOMAIN_RULE_DIFFERENCE'
-  | 'LEGACY_SOURCE_ENCODING_UNCERTAIN'
+  | 'LEGACY_IMPORTED_TEXT_CORRUPTION_CONFIRMED'
   | 'LEGACY_CORRELATION_DIFFERENCE'
   | 'LEGACY_EMPTY_VS_EXPLICIT_STATE'
   | 'FIXTURE_DATA_UNCERTAIN'
@@ -171,11 +171,13 @@ const documentDescription =
 const signedInvoiceDescription =
   'Fatura com Assinatura com cor diferente de azul (INV)'
 
-const encodingDiagnostic = (dimension: string): DifferentialDiagnostic => ({
-  category: 'LEGACY_SOURCE_ENCODING_UNCERTAIN',
+const importedTextCorruptionDiagnostic = (
+  dimension: string,
+): DifferentialDiagnostic => ({
+  category: 'LEGACY_IMPORTED_TEXT_CORRUPTION_CONFIRMED',
   firstProbableBoundary:
-    'eComex source representation -> projectEComexOperationalDeviation / documentary summary',
-  note: `${dimension}: the supplied semantic text contains não, while the external snapshot inspection exposed replacement characters whose origin is unverified.`,
+    'physical eComex export -> legacy Google Sheets import boundary',
+  note: `${dimension}: Google Sheets stored U+FFFD in the imported description while Config stored não intact; the original byte-level corruption point remains undetermined.`,
 })
 
 const LEGACY_SNAPSHOT_FIXTURES: readonly LegacySnapshotFixture[] = [
@@ -323,8 +325,10 @@ const LEGACY_SNAPSHOT_FIXTURES: readonly LegacySnapshotFixture[] = [
       openNonBlockingDeviationCount: 2,
     },
     mismatchDiagnostics: {
-      openBlockingDeviationCount: encodingDiagnostic('blocking count'),
-      openNonBlockingDeviationCount: encodingDiagnostic('non-blocking count'),
+      openBlockingDeviationCount:
+        importedTextCorruptionDiagnostic('blocking count'),
+      openNonBlockingDeviationCount:
+        importedTextCorruptionDiagnostic('non-blocking count'),
     },
     fixtureNotes: [
       'The documentary deviation observation was not supplied, so the fixture preserves it as absent and does not infer a documentary flag.',
@@ -376,9 +380,13 @@ const LEGACY_SNAPSHOT_FIXTURES: readonly LegacySnapshotFixture[] = [
       digitalOriginal: 'RECEIVED_WITH_OPEN_DEVIATION',
     },
     mismatchDiagnostics: {
-      openBlockingDeviationCount: encodingDiagnostic('blocking count'),
-      openNonBlockingDeviationCount: encodingDiagnostic('non-blocking count'),
-      digitalOriginal: encodingDiagnostic('digital original status'),
+      openBlockingDeviationCount:
+        importedTextCorruptionDiagnostic('blocking count'),
+      openNonBlockingDeviationCount:
+        importedTextCorruptionDiagnostic('non-blocking count'),
+      digitalOriginal: importedTextCorruptionDiagnostic(
+        'digital original status',
+      ),
     },
     notComparable: {
       physicalOriginal: {
@@ -464,9 +472,13 @@ const LEGACY_SNAPSHOT_FIXTURES: readonly LegacySnapshotFixture[] = [
       digitalOriginal: 'RECEIVED_WITH_OPEN_DEVIATION',
     },
     mismatchDiagnostics: {
-      openBlockingDeviationCount: encodingDiagnostic('blocking count'),
-      openNonBlockingDeviationCount: encodingDiagnostic('non-blocking count'),
-      digitalOriginal: encodingDiagnostic('digital original status'),
+      openBlockingDeviationCount:
+        importedTextCorruptionDiagnostic('blocking count'),
+      openNonBlockingDeviationCount:
+        importedTextCorruptionDiagnostic('non-blocking count'),
+      digitalOriginal: importedTextCorruptionDiagnostic(
+        'digital original status',
+      ),
     },
   },
 ]
@@ -673,6 +685,15 @@ describe('legacy snapshot 2026-09-29', () => {
       MISMATCH: 8,
       NOT_COMPARABLE: 1,
     })
+    expect(
+      dimensions
+        .filter((dimension) => dimension.outcome === 'MISMATCH')
+        .every(
+          (dimension) =>
+            dimension.diagnostic?.category ===
+            'LEGACY_IMPORTED_TEXT_CORRUPTION_CONFIRMED',
+        ),
+    ).toBe(true)
     expect(legacyBlank).toMatchObject({
       actualValue: 'UNIDENTIFIED',
       outcome: 'NOT_COMPARABLE',

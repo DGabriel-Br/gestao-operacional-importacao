@@ -81,6 +81,18 @@ linha lógica eComex
 
 Essa fronteira não classifica desvios, não interpreta `FIM` como estado de abertura, não correlaciona `EMBARQUE` com o eTrack e não decide a aceitação total ou parcial de um lote. O formato físico da exportação permanece fora do contrato até que existam amostras confirmadas.
 
+O contrato atual recebe `rawData` com valores JavaScript já decodificados. Ele não recebe bytes, não detecta BOM, não declara charset e não possui parser CSV físico. Uma futura responsabilidade de decoding deve permanecer na infraestrutura ou fronteira técnica específica do eComex, antes do contrato lógico atual:
+
+```text
+bytes da exportação eComex
+  -> decoder e parser físico específicos da fonte
+  -> EComexRowInput com strings técnicas
+  -> importador e normalizador lógico atual
+  -> projeção da Application
+```
+
+A investigação do snapshot de 29/09/2026 confirmou U+FFFD armazenado na aba `Importação eComex`, mas não encontrou o arquivo original no workspace. Logo, nenhum charset da fonte foi inferido e nenhum decoder ou reparador textual foi introduzido.
+
 ### Projeção eComex da Application
 
 ```text
