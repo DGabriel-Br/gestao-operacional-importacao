@@ -130,6 +130,24 @@ Somente desvios `OPEN` cuja descrição corresponda, sem diferenciar caixa, a `d
 
 Issues de colisão, duplicatas, ordem e traces continuam preservadas no resultado original da correlação. A subcorrelação documental não elimina matches nem altera as contagens, e a composição não executa `OperationalAssessment`.
 
+### Execução do OperationalAssessment na Application
+
+```text
+ETrackOperationalFacts
++ OperationalDeviationCorrelationResult
++ evaluationDate explícita
+  -> composeOperationalDeviationSummary
+  -> OperationalAssessmentFacts
+  -> assessOperationalProcess
+  -> resultado assessed ou unassessable
+```
+
+A função pura da Application recebe somente fatos eTrack já projetados, uma correlação já executada e uma `CivilDate` de avaliação. Ela não recebe linhas técnicas, não correlaciona novamente, não classifica desvios e não interpreta observações. O `OperationalDeviationSummary` é produzido exclusivamente pela composição documental existente, e `assessOperationalProcess` é a única porta usada para executar as políticas multidimensionais do Domain.
+
+Uma correlação `uncorrelatable` produz `unassessable`, preservando os fatos eTrack, a data de avaliação, o motivo e as issues originais, sem fabricar summary. Uma correlação `correlated`, inclusive com zero matches, produz `assessed`. Issues diagnósticas como colisão permanecem na projeção da correlação e não bloqueiam a avaliação.
+
+O resultado interno preserva `ETrackOperationalFacts`, `evaluationDate`, a projeção do summary, os `OperationalAssessmentFacts` enviados e o assessment completo. Assim, `processNumber` e `customerReference` continuam disponíveis como contexto da Application sem entrar nas regras do Domain. Elegibilidade `ineligible` ou `undetermined` não impede o assessment, e tensões entre etapa, Mercante, documentos, criticidade e alerta não são reconciliadas.
+
 Os contratos e os importadores das duas fontes permanecem separados. A comparação da Etapa 5 extraiu somente a representação e o parsing técnico de datas ISO, sem nomes de campos, mensagens, issues ou conhecimento das fontes. Cabeçalhos, modais, textos, rastreabilidade, projeções normalizadas e produção de issues permanecem específicos. A taxonomia de issues não foi compartilhada porque ainda mistura localização e natureza do problema.
 
 ## Componentes futuros documentados
