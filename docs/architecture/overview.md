@@ -36,7 +36,7 @@ Inclui controllers NestJS e a aplicação Next.js. Traduz entradas e apresenta r
 ## Componentes atuais
 
 - `apps/api`: shell mínimo da aplicação NestJS.
-- `apps/api/src/application/operational-assessment`: projeções puras dos dados técnicos normalizados do eTrack e do eComex, seguidas pela correlação legado específica entre suas referências e pela agregação básica dos impactos `OPEN`. Somente a projeção eComex chama as políticas públicas de impacto e lifecycle do Domain; nenhuma função executa o assessment completo.
+- `apps/api/src/application/operational-assessment`: projeções puras dos dados técnicos normalizados do eTrack e do eComex, correlação legado, composição do resumo de desvios e execução controlada do assessment completo por `assessOperationalProcess`.
 - `apps/api/src/imports/etrack`: contrato lógico, validação e normalização técnica específicos do eTrack, ainda sem parser físico, endpoint, persistência ou caso de uso.
 - `apps/api/src/imports/ecomex`: contrato lógico, validação e normalização técnica específicos do eComex, ainda sem parser físico, endpoint, persistência ou caso de uso.
 - `apps/api/src/imports/shared`: representação e parsing técnico de datas ISO, compartilhados apenas porque possuem semântica idêntica nas duas fronteiras.
@@ -147,6 +147,12 @@ A função pura da Application recebe somente fatos eTrack já projetados, uma c
 Uma correlação `uncorrelatable` produz `unassessable`, preservando os fatos eTrack, a data de avaliação, o motivo e as issues originais, sem fabricar summary. Uma correlação `correlated`, inclusive com zero matches, produz `assessed`. Issues diagnósticas como colisão permanecem na projeção da correlação e não bloqueiam a avaliação.
 
 O resultado interno preserva `ETrackOperationalFacts`, `evaluationDate`, a projeção do summary, os `OperationalAssessmentFacts` enviados e o assessment completo. Assim, `processNumber` e `customerReference` continuam disponíveis como contexto da Application sem entrar nas regras do Domain. Elegibilidade `ineligible` ou `undetermined` não impede o assessment, e tensões entre etapa, Mercante, documentos, criticidade e alerta não são reconciliadas.
+
+### Validação diferencial histórica
+
+O primeiro harness diferencial está localizado junto aos testes da Application e congela oito processos do snapshot legado de 29/09/2026. Ele usa `evaluationDate` explícita, executa as fronteiras e composições existentes e compara nove dimensões por processo como `MATCH`, `MISMATCH` ou `NOT_COMPARABLE`.
+
+As expectativas legado são fixtures estáticas independentes das funções do Domain. O teste não acessa Google Sheets, Google Drive, HTTP, banco ou relógio e não implementa um segundo motor legado. Divergências permanecem resultados diagnósticos com categoria e primeira fronteira provável. A matriz confirmada está em [Validação diferencial do snapshot legado de 29/09/2026](../validation/legacy-snapshot-2026-09-29.md).
 
 Os contratos e os importadores das duas fontes permanecem separados. A comparação da Etapa 5 extraiu somente a representação e o parsing técnico de datas ISO, sem nomes de campos, mensagens, issues ou conhecimento das fontes. Cabeçalhos, modais, textos, rastreabilidade, projeções normalizadas e produção de issues permanecem específicos. A taxonomia de issues não foi compartilhada porque ainda mistura localização e natureza do problema.
 
