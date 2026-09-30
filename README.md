@@ -8,7 +8,7 @@ O repositório contém a fundação técnica, as duas primeiras fronteiras de in
 
 - monorepo com pnpm workspaces;
 - aplicação NestJS mínima com um adaptador HTTP stateless para o snapshot operacional;
-- aplicação Next.js mínima, sem telas de negócio;
+- aplicação Next.js com uma tela técnica provisória para executar e inspecionar snapshots operacionais pelo contrato HTTP;
 - pacote de domínio puro com a elegibilidade para acompanhamento operacional principal;
 - reconhecimento do evento operacional pelo algoritmo textual legado;
 - determinação da etapa operacional a partir do evento reconhecido e, para `TYPING_COMPLETED`, do modal e da presença da referência Mercante;
@@ -27,6 +27,7 @@ O repositório contém a fundação técnica, as duas primeiras fronteiras de in
 - caso de uso puro em lote que preserva a ordem dos fatos eTrack, avalia cada processo independentemente e diagnostica colisões entre referências eTrack distintas sem alterar a correlação legado;
 - caso de uso puro de snapshot que recebe linhas lógicas já decodificadas, reutiliza importadores, projeções e batch assessment existentes e bloqueia o snapshot completo quando qualquer linha possui erro técnico ou projeção inválida;
 - endpoint `POST /operational-assessment/snapshot`, que valida o contrato JSON, converte a data civil e delega exclusivamente para `runOperationalSnapshot`;
+- interface web stateless que recebe a data de avaliação e os arrays JSON já decodificados, chama o endpoint por um rewrite de mesma origem e apresenta processos, warnings, diagnostics e falhas sem executar regras operacionais;
 - harness de validação diferencial com fixture estática do snapshot legado de 29/09/2026, que compara oito processos por dimensão sem alterar regras para eliminar divergências;
 - documentação de arquitetura e descoberta do domínio;
 - contrato lógico e normalização técnica de linhas do eTrack;
@@ -35,7 +36,7 @@ O repositório contém a fundação técnica, as duas primeiras fronteiras de in
 - reconhecimento legado das evidências de transbordo e atracação, separado da decisão de elegibilidade;
 - typecheck e testes automatizados.
 
-Os formatos físicos das exportações eTrack e eComex ainda não foram definidos. A ingestão não lê CSV, XLSX ou sistemas externos e não persiste dados. A projeção eTrack termina nos fatos específicos da fonte. A projeção eComex termina em um desvio individual explicável e chama somente as políticas públicas de impacto e lifecycle do Domain. A Application reproduz a correlação geral legado por dígitos para preservar matches e contagens básicas dos desvios `OPEN`. Sobre esses matches, a composição documental aplica a chave específica que preserva `/` e os padrões textuais caracterizados para produzir as flags digital e física. A composição final da Application reutiliza essas saídas, exige uma data de avaliação explícita e chama apenas `assessOperationalProcess`; correlação impossível permanece sem assessment, enquanto zero matches é um resultado correlacionado válido. O primeiro caso de uso em lote recebe somente projeções já confiáveis, preserva um resultado individual por entrada eTrack e expõe colisões da chave legado como diagnóstico, sem resolvê-las ou ordenar os processos. `runOperationalSnapshot` começa depois do decoding físico: recebe linhas JavaScript, executa os importadores lógicos e as projeções existentes e só chama `assessOperationalBatch` quando nenhuma linha possui erro técnico ou projeção inválida. Warnings, colisões diagnósticas e resultados individuais `unassessable` não invalidam a fonte; linhas inválidas nunca são descartadas para fabricar um snapshot parcial. O primeiro adaptador HTTP aceita somente JSON com linhas já decodificadas e não implementa upload, CSV, encoding ou persistência. A validação diferencial de 29/09/2026 é exclusivamente um teste histórico estático, sem acesso em runtime à planilha. IO de arquivos, banco de dados, autenticação e demais integrações ainda não foram implementados.
+Os formatos físicos das exportações eTrack e eComex ainda não foram definidos. A ingestão não lê CSV, XLSX ou sistemas externos e não persiste dados. A projeção eTrack termina nos fatos específicos da fonte. A projeção eComex termina em um desvio individual explicável e chama somente as políticas públicas de impacto e lifecycle do Domain. A Application reproduz a correlação geral legado por dígitos para preservar matches e contagens básicas dos desvios `OPEN`. Sobre esses matches, a composição documental aplica a chave específica que preserva `/` e os padrões textuais caracterizados para produzir as flags digital e física. A composição final da Application reutiliza essas saídas, exige uma data de avaliação explícita e chama apenas `assessOperationalProcess`; correlação impossível permanece sem assessment, enquanto zero matches é um resultado correlacionado válido. O primeiro caso de uso em lote recebe somente projeções já confiáveis, preserva um resultado individual por entrada eTrack e expõe colisões da chave legado como diagnóstico, sem resolvê-las ou ordenar os processos. `runOperationalSnapshot` começa depois do decoding físico: recebe linhas JavaScript, executa os importadores lógicos e as projeções existentes e só chama `assessOperationalBatch` quando nenhuma linha possui erro técnico ou projeção inválida. Warnings, colisões diagnósticas e resultados individuais `unassessable` não invalidam a fonte; linhas inválidas nunca são descartadas para fabricar um snapshot parcial. O primeiro adaptador HTTP aceita somente JSON com linhas já decodificadas e não implementa upload, CSV, encoding ou persistência. A interface Next.js conhece apenas esse contrato HTTP e apresenta os códigos recebidos sem importar a API ou o Domain, normalizar dados ou ordenar processos. A validação diferencial de 29/09/2026 é exclusivamente um teste histórico estático, sem acesso em runtime à planilha. IO de arquivos, banco de dados, autenticação e demais integrações ainda não foram implementados.
 
 ## Estrutura
 
@@ -77,7 +78,18 @@ corepack pnpm dev:api
 corepack pnpm dev:web
 ```
 
-A API usa a porta 3001 por padrão. O Next.js usa a porta 3000.
+A API usa a porta 3001 por padrão. O Next.js usa a porta 3000 e encaminha
+`/api/backend/operational-assessment/snapshot` para a API sem exigir CORS. O
+destino padrão é `http://localhost:3001`; para usar outro endereço, defina
+`OPERATIONAL_API_URL` no processo do Web antes de executar `dev:web`:
+
+```powershell
+$env:OPERATIONAL_API_URL = 'http://localhost:3001'
+corepack pnpm dev:web
+```
+
+A tela recebe somente arrays JSON com linhas lógicas já decodificadas. Ela não
+faz upload, parsing de CSV, decoding, persistência ou correção de encoding.
 
 ## Princípios
 

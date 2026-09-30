@@ -40,7 +40,7 @@ Inclui controllers NestJS e a aplicação Next.js. Traduz entradas e apresenta r
 - `apps/api/src/imports/etrack`: contrato lógico, validação e normalização técnica específicos do eTrack, ainda sem parser físico, endpoint, persistência ou caso de uso.
 - `apps/api/src/imports/ecomex`: contrato lógico, validação e normalização técnica específicos do eComex, ainda sem parser físico, endpoint, persistência ou caso de uso.
 - `apps/api/src/imports/shared`: representação e parsing técnico de datas ISO, compartilhados apenas porque possuem semântica idêntica nas duas fronteiras.
-- `apps/web`: shell mínimo da aplicação Next.js.
+- `apps/web`: aplicação Next.js com a primeira interface técnica e provisória para execução e inspeção do snapshot pelo contrato HTTP.
 - `packages/domain`: domínio puro com as políticas caracterizadas de acompanhamento, evento, etapa, criticidade, desvios, alerta principal, originais digital e físico e Mercante. `OperationalAssessment` coordena essas decisões sem fundi-las em status global.
 
 Nenhum outro pacote foi criado porque ainda não existe uso concreto.
@@ -208,6 +208,24 @@ O controller NestJS é um adaptador de entrada fino. Ele recebe o body como `unk
 A data externa aceita exclusivamente `YYYY-MM-DD`. O adaptador reutiliza `parseTechnicalIsoDate` para validar o calendário, exige o ramo `date` e igualdade com a string original e extrai ano, mês e dia sem `Date`, timezone ou relógio. `rawData` é validado apenas como objeto JSON e repassado sem trim, normalização, renomeação ou reparo de encoding. O response omite as projeções que carregaram a entrada e não ecoa `rawData`; preserva warnings por fonte, entries e diagnostics do batch ou as falhas das duas fontes.
 
 O adaptador não possui service intermediário, parser CSV, upload, decoder, persistência, autenticação, Swagger ou regras operacionais. O contrato provisório está documentado em [Snapshot operacional HTTP](../api/operational-snapshot.md).
+
+### Interface web técnica do snapshot
+
+```text
+browser
+  -> formulário com evaluationDate e arrays JSON
+  -> rota de mesma origem do Next.js
+  -> rewrite sem transformação semântica
+  -> POST /operational-assessment/snapshot no NestJS
+```
+
+A primeira interface funcional em `apps/web` conhece somente uma projeção local mínima do contrato HTTP. Ela não importa `apps/api`, `packages/domain` nem tipos internos da Application. O browser envia o request para `/api/backend/operational-assessment/snapshot`; o Next.js encaminha a chamada para `OPERATIONAL_API_URL`, com `http://localhost:3001` como padrão local. Essa topologia evita habilitar CORS apenas para desenvolvimento e não cria um BFF com decisões próprias.
+
+A tela exige a data de avaliação explicitamente, usa `JSON.parse` somente para converter o conteúdo das duas textareas e repassa os valores sem normalizar células, cabeçalhos, acentos ou U+FFFD. JSON sintaticamente inválido é interrompido localmente; a API continua responsável pelo contrato HTTP e pela validade técnica das fontes.
+
+Resultados `ready`, `invalid_source_data`, `bad_request` e falhas de rede ou servidor permanecem distintos. Entries `unassessable` continuam visíveis e na ordem devolvida pelo lote. Warnings eTrack, warnings eComex e diagnostics transversais são apresentados separadamente. A tabela apenas projeta etapa, criticidade, alerta, contagens e estados documentais já recebidos no assessment. Não existe reconhecimento, correlação, ordenação, prioridade ou outra regra operacional no Web, e `rawData` não é exibido, persistido nem enviado para armazenamento local.
+
+A interface continua provisória e recebe somente JSON com linhas lógicas já decodificadas. CSV, upload, decoding físico, persistência, autenticação e dashboard executivo permanecem fora desse fluxo.
 
 ### Validação diferencial histórica
 
