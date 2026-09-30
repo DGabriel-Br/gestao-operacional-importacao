@@ -176,6 +176,23 @@ O lote reutiliza `createLegacyCorrelationKey` para detectar quando referências 
 
 O lote não conhece a chave documental que preserva `/`, não executa políticas do Domain diretamente, não produz status global, score, prioridade, persistência ou IO. `processNumber` permanece somente como contexto e não participa da correlação nem da detecção da chave.
 
+### Snapshot operacional sobre fontes lógicas decodificadas
+
+```text
+ETrackRowInput[] + EComexRowInput[] + evaluationDate explícita
+  -> importadores lógicos por linha
+  -> projeções operacionais por linha
+  -> validação fail-closed da fonte completa
+  -> assessOperationalBatch
+  -> snapshot ready ou invalid_source_data
+```
+
+`runOperationalSnapshot` é a primeira orquestração completa em memória depois do decoding físico. Ela recebe somente valores JavaScript já decodificados e reutiliza `importETrackRow`, `importEComexRow`, `projectETrackOperationalFacts`, `projectEComexOperationalDeviation` e, quando todas as linhas são confiáveis, `assessOperationalBatch`. A função não recebe bytes, arquivos, strings CSV ou cabeçalhos físicos e não implementa charset, BOM, parsing de CSV ou reparo de texto.
+
+A política inicial é fail-closed: qualquer issue de importação com severidade `error` ou qualquer projeção `invalid` produz `invalid_source_data`, preserva trace, issues técnicas e issues de projeção e impede a criação do `OperationalBatchAssessment`. Todas as linhas das duas fontes são examinadas para que as falhas sejam acumuladas; nenhuma linha inválida é filtrada para fabricar um snapshot parcial. Issues `warning` permanecem nas projeções prontas e não bloqueiam o snapshot.
+
+Fontes vazias são entradas válidas. eTrack vazio com eComex válido produz batch vazio; eTrack válido com eComex vazio avalia os processos com zero desvios. Um resultado individual `unassessable` também não significa fonte inválida e permanece dentro de um snapshot `ready`, assim como os diagnósticos de colisão da Etapa 23. `assessOperationalBatch` é a única porta desse caso de uso para correlação, composição documental e avaliação operacional.
+
 ### Validação diferencial histórica
 
 O primeiro harness diferencial está localizado junto aos testes da Application e congela oito processos do snapshot legado de 29/09/2026. Ele usa `evaluationDate` explícita, executa as fronteiras e composições existentes e compara nove dimensões por processo como `MATCH`, `MISMATCH` ou `NOT_COMPARABLE`.
