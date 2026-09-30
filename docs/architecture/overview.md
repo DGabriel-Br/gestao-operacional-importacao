@@ -35,7 +35,7 @@ Inclui controllers NestJS e a aplicação Next.js. Traduz entradas e apresenta r
 
 ## Componentes atuais
 
-- `apps/api`: shell mínimo da aplicação NestJS.
+- `apps/api`: aplicação NestJS mínima com um adaptador HTTP stateless para o snapshot operacional.
 - `apps/api/src/application/operational-assessment`: projeções puras dos dados técnicos normalizados do eTrack e do eComex, correlação legado, composição do resumo de desvios e execução controlada do assessment completo por `assessOperationalProcess`.
 - `apps/api/src/imports/etrack`: contrato lógico, validação e normalização técnica específicos do eTrack, ainda sem parser físico, endpoint, persistência ou caso de uso.
 - `apps/api/src/imports/ecomex`: contrato lógico, validação e normalização técnica específicos do eComex, ainda sem parser físico, endpoint, persistência ou caso de uso.
@@ -192,6 +192,22 @@ ETrackRowInput[] + EComexRowInput[] + evaluationDate explícita
 A política inicial é fail-closed: qualquer issue de importação com severidade `error` ou qualquer projeção `invalid` produz `invalid_source_data`, preserva trace, issues técnicas e issues de projeção e impede a criação do `OperationalBatchAssessment`. Todas as linhas das duas fontes são examinadas para que as falhas sejam acumuladas; nenhuma linha inválida é filtrada para fabricar um snapshot parcial. Issues `warning` permanecem nas projeções prontas e não bloqueiam o snapshot.
 
 Fontes vazias são entradas válidas. eTrack vazio com eComex válido produz batch vazio; eTrack válido com eComex vazio avalia os processos com zero desvios. Um resultado individual `unassessable` também não significa fonte inválida e permanece dentro de um snapshot `ready`, assim como os diagnósticos de colisão da Etapa 23. `assessOperationalBatch` é a única porta desse caso de uso para correlação, composição documental e avaliação operacional.
+
+### Adaptador HTTP do snapshot operacional
+
+```text
+POST /operational-assessment/snapshot
+  -> validação estrutural do JSON
+  -> evaluationDate estrita YYYY-MM-DD
+  -> runOperationalSnapshot
+  -> DTO HTTP ready ou invalid_source_data
+```
+
+O controller NestJS é um adaptador de entrada fino. Ele recebe o body como `unknown`, valida somente a forma externa, converte a data civil e chama `runOperationalSnapshot` uma vez. Tipos incorretos no request produzem HTTP 400 com issues por caminho. Valores com tipo correto, mas tecnicamente inválidos para uma fonte, atravessam o adaptador e retornam HTTP 200 com `invalid_source_data`. Um snapshot `ready` também retorna HTTP 200; o POST não cria recurso persistente.
+
+A data externa aceita exclusivamente `YYYY-MM-DD`. O adaptador reutiliza `parseTechnicalIsoDate` para validar o calendário, exige o ramo `date` e igualdade com a string original e extrai ano, mês e dia sem `Date`, timezone ou relógio. `rawData` é validado apenas como objeto JSON e repassado sem trim, normalização, renomeação ou reparo de encoding. O response omite as projeções que carregaram a entrada e não ecoa `rawData`; preserva warnings por fonte, entries e diagnostics do batch ou as falhas das duas fontes.
+
+O adaptador não possui service intermediário, parser CSV, upload, decoder, persistência, autenticação, Swagger ou regras operacionais. O contrato provisório está documentado em [Snapshot operacional HTTP](../api/operational-snapshot.md).
 
 ### Validação diferencial histórica
 
